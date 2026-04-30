@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vsk-sistem",
+  "compatibility_date": "2026-04-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": { "directory": "." },
+
+  // ─────────────────────────────────────────────────────────────
+  // ENV: STAGING & PRODUCTION
+  // ─────────────────────────────────────────────────────────────
+  // Source code identik untuk dua env. Frontend deteksi env dari
+  // hostname (`*staging*` / `localhost` / `127.0.0.1` → staging,
+  // selain itu → production), lalu pilih SHEETS_URL yang sesuai.
+  //
+  // Deploy commands:
+  //   npx wrangler deploy --env staging
+  //   npx wrangler deploy --env production
+  //
+  // PENTING:
+  // - `name` di tiap env block menentukan nama worker terpisah, jadi
+  //   hostname default-nya juga berbeda (mis. vsk-sistem-staging.<acct>.workers.dev
+  //   vs vsk-sistem.<acct>.workers.dev).
+  // - Kalau pakai custom domain, isi `routes` di env yang sesuai.
+  // - JANGAN deploy tanpa flag --env (tanpa flag akan pakai top-level
+  //   `name` saja dan kemungkinan menabrak salah satu deployment).
+  "env": {
+    "staging": {
+      "name": "vsk-sistem-staging",
+      "observability": { "enabled": true },
+      "assets": { "directory": "." }
+      // "routes": [{ "pattern": "staging.vsk-sistem.example.com", "custom_domain": true }]
+    },
+    "production": {
+      "name": "vsk-sistem",
+      "observability": { "enabled": true },
+      "assets": { "directory": "." }
+      // "routes": [{ "pattern": "vsk-sistem.example.com", "custom_domain": true }]
+    }
+  }
+}

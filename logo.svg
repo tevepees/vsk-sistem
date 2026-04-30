@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  VSK Logo — placeholder vector
+  Approximation berbasis VSK Logo Simple Guideline.
+  Untuk replace: timpa file ini dengan SVG asli (atau PNG transparan
+  dengan nama file yang sama). Tidak perlu edit index.html.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 240" role="img" aria-label="VSK">
+  <defs>
+    <linearGradient id="vsk_s_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6FBC33"/>
+      <stop offset="100%" stop-color="#048419"/>
+    </linearGradient>
+    <linearGradient id="vsk_v_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7FCC3E"/>
+      <stop offset="100%" stop-color="#5BA628"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Letter V: chunky tall character, curved bottom -->
+  <path fill="url(#vsk_v_grad)" d="
+    M 30 28
+    Q 30 24 35 24
+    L 92 24
+    Q 97 24 96 30
+    Q 92 90 86 138
+    Q 80 188 70 218
+    Q 65 230 60 230
+    Q 55 230 50 218
+    Q 40 188 34 138
+    Q 28 90 30 28 Z"/>
+
+  <!-- Letter S: flowing ribbon with gradient -->
+  <path stroke="url(#vsk_s_grad)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" fill="none" d="
+    M 145 35
+    C 188 28, 224 50, 220 88
+    C 217 116, 178 116, 168 142
+    C 158 170, 196 188, 240 178"/>
+
+  <!-- Yellow accent triangle (mountain) -->
+  <polygon fill="#FFD333" points="190 222 245 222 217.5 178"/>
+</svg>

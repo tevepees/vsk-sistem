@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Development VSK — Staging vs Production</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --leaf:#048419; --leaf2:#6FBC33; --leaf-bg:#e9f4ec;
+  --amber:#b88716; --amber2:#FFD333; --amber-bg:#fff8db;
+  --char:#03473C; --brown:#5a6960; --sand:#8a9089; --stone:#bcbeb3;
+  --cream:#fbfaf6; --cream2:#f0efe8;
+  --border:#dee0d7; --rose:#a05050;
+  --sans:'Open Sans',sans-serif; --serif:'Exo 2',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--cream);color:var(--char);line-height:1.65;}
+
+.wrap{max-width:920px;margin:0 auto;padding:48px 28px 80px;}
+
+/* ── Header ── */
+.hero{padding-bottom:32px;border-bottom:1px solid var(--border);margin-bottom:40px;}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;color:var(--leaf);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;}
+.hero h1{font-family:var(--serif);font-size:42px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;margin-bottom:12px;}
+.hero h1 em{color:var(--leaf);font-style:italic;font-weight:600;}
+.hero-sub{font-size:16px;color:var(--brown);max-width:640px;}
+
+/* ── Logo lockup ── */
+.vsk-logo{display:block;width:54px;height:auto;margin-bottom:18px;user-select:none;}
+
+/* ── Sections ── */
+.section{margin-top:56px;}
+.section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;}
+.section-num{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--leaf);background:var(--leaf-bg);width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.section-title{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--char);letter-spacing:-0.01em;}
+.section-lead{font-size:15px;color:var(--brown);margin-bottom:18px;}
+
+/* ── Card ── */
+.card{background:white;border:1px solid var(--border);border-radius:14px;padding:22px 24px;margin-bottom:14px;}
+.card h3{font-family:var(--serif);font-size:16px;font-weight:600;margin-bottom:8px;color:var(--char);}
+.card p{font-size:14px;color:var(--brown);}
+.card p + p{margin-top:8px;}
+
+/* ── Analogi (split panel) ── */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0;}
+.split-col{padding:22px;border-radius:14px;}
+.split-col.staging{background:var(--amber-bg);border:1px solid #f0d896;}
+.split-col.prod{background:var(--leaf-bg);border:1px solid #b8d9bf;}
+.split-tag{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
+.split-col.staging .split-tag{color:var(--amber);}
+.split-col.prod .split-tag{color:var(--leaf);}
+.split-col h4{font-family:var(--serif);font-size:18px;font-weight:600;margin-bottom:10px;}
+.split-col p{font-size:13px;color:var(--brown);margin-bottom:6px;}
+.split-col ul{list-style:none;padding:0;font-size:13px;color:var(--brown);}
+.split-col li{padding:4px 0;}
+.split-col li::before{content:"›";color:currentColor;font-weight:700;margin-right:8px;opacity:.5;}
+
+/* ── Architecture diagram ── */
+.arch{background:white;border:1px solid var(--border);border-radius:14px;padding:28px 24px;margin:14px 0;}
+.arch-stage{display:grid;grid-template-columns:1fr 80px 1fr;gap:8px;align-items:center;margin-bottom:16px;}
+.arch-stage:last-child{margin-bottom:0;}
+.arch-box{padding:14px 16px;border-radius:10px;background:var(--cream2);border:1px solid var(--border);text-align:center;}
+.arch-box.repo{background:#eef0e8;}
+.arch-box.branch{background:white;}
+.arch-box.worker{background:var(--leaf-bg);border-color:#b8d9bf;}
+.arch-box.worker.staging{background:var(--amber-bg);border-color:#f0d896;}
+.arch-box.db{background:#f6f4eb;border-color:#dcd4b8;}
+.arch-box .lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sand);margin-bottom:4px;}
+.arch-box .nm{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--char);}
+.arch-box .meta{font-family:var(--mono);font-size:10px;color:var(--sand);margin-top:3px;}
+.arch-arrow{text-align:center;font-family:var(--mono);font-size:22px;color:var(--stone);}
+.arch-row-label{font-family:var(--mono);font-size:10px;color:var(--sand);text-transform:uppercase;letter-spacing:0.12em;text-align:center;margin:14px 0 8px;padding:8px;background:var(--cream);border-radius:6px;}
+
+.arch-detect{display:flex;align-items:center;gap:14px;background:var(--cream);border:1px dashed var(--border);border-radius:10px;padding:14px 18px;margin:14px 0;}
+.arch-detect-icon{font-size:22px;}
+.arch-detect-text{flex:1;font-size:13px;color:var(--brown);}
+.arch-detect-text code{font-family:var(--mono);font-size:12px;background:white;padding:1px 5px;border-radius:4px;border:1px solid var(--border);}
+
+/* ── Flow steps ── */
+.flow{display:flex;flex-direction:column;gap:14px;}
+.flow-step{display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:flex-start;background:white;border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.flow-num{width:36px;height:36px;border-radius:50%;background:var(--leaf);color:white;font-family:var(--serif);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.flow-num.warn{background:var(--amber2);color:var(--char);}
+.flow-content h4{font-family:var(--serif);font-size:15px;font-weight:600;margin-bottom:4px;}
+.flow-content p{font-size:13px;color:var(--brown);margin-bottom:8px;}
+.flow-cmd{font-family:var(--mono);font-size:12px;background:var(--cream2);padding:8px 12px;border-radius:6px;border-left:3px solid var(--leaf);margin-top:6px;display:block;color:var(--char);}
+.flow-cmd .comment{color:var(--sand);}
+
+/* ── Cheat sheet ── */
+.cheat{background:var(--char);color:#cfe6d5;border-radius:14px;padding:24px;font-family:var(--mono);font-size:12.5px;line-height:1.85;overflow-x:auto;}
+.cheat .ct{color:var(--amber2);font-weight:600;}
+.cheat .gn{color:var(--leaf2);}
+.cheat .cm{color:#7d9a85;font-style:italic;}
+.cheat .pr{color:#cfe6d5;opacity:.6;user-select:none;}
+
+/* ── FAQ ── */
+.faq{display:flex;flex-direction:column;gap:10px;}
+.faq-item{background:white;border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.faq-q{font-family:var(--serif);font-weight:600;font-size:14px;color:var(--char);margin-bottom:6px;}
+.faq-q::before{content:"Q · ";color:var(--leaf);font-weight:700;}
+.faq-a{font-size:13.5px;color:var(--brown);}
+.faq-a::before{content:"A · ";color:var(--amber);font-weight:700;font-family:var(--serif);}
+
+/* ── Pill ── */
+.pill{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;letter-spacing:0.1em;text-transform:uppercase;}
+.pill.green{background:var(--leaf-bg);color:var(--leaf);}
+.pill.amber{background:var(--amber-bg);color:var(--amber);}
+
+/* ── Footer ── */
+.footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);font-size:13px;color:var(--sand);text-align:center;}
+
+/* ── Responsive ── */
+@media (max-width:680px){
+  .wrap{padding:32px 18px 60px;}
+  .hero h1{font-size:32px;}
+  .split{grid-template-columns:1fr;}
+  .arch-stage{grid-template-columns:1fr;gap:4px;}
+  .arch-arrow{transform:rotate(90deg);}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══ HERO ═══ -->
+<header class="hero">
+  <img src="logo.svg" alt="VSK" class="vsk-logo">
+  <div class="hero-eyebrow">Panduan Development</div>
+  <h1>Memahami <em>Staging</em> vs <em>Production</em></h1>
+  <p class="hero-sub">Panduan visual untuk Tony — bagaimana kita memisahkan ruang "tes" dari ruang "live" di sistem VSK, kapan deploy ke mana, dan workflow harian yang aman untuk pemula SDLC.</p>
+</header>
+
+<!-- ═══ SECTION 1: KONSEP ═══ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-num">1</div>
+    <div class="section-title">Konsep dasar — staging itu apa?</div>
+  </div>
+  <p class="section-lead">Bayangkan sebuah restoran. Production = dapur asli yang menyajikan ke pelanggan. Staging = dapur latihan yang setup-nya sama persis tapi tidak ada pelanggan. Koki uji resep baru di dapur latihan dulu — kalau enak, baru dipakai di dapur asli.</p>
+
+  <div class="split">
+    <div class="split-col staging">
+      <div class="split-tag">Staging</div>
+      <h4>Lab tes</h4>
+      <ul>
+        <li>Hostname mengandung kata <code>staging</code></li>
+        <li>Database terpisah (spreadsheet <em>[Staging]</em>)</li>
+        <li>Boleh rusak, boleh ada bug, boleh data kacau</li>
+        <li>Dipakai untuk uji fitur baru sebelum dipakai operator</li>
+      </ul>
+    </div>
+    <div class="split-col prod">
+      <div class="split-tag">Production</div>
+      <h4>Live</h4>
+      <ul>
+        <li>Hostname tanpa kata staging</li>
+        <li>Database utama (spreadsheet asli)</li>
+        <li>Tidak boleh rusak — operator pabrik pakai ini</li>
+        <li>Hanya menerima fitur yang sudah lulus tes di staging</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Kenapa ini penting?</h3>
+    <p>Tanpa staging: kalau ada bug di kode baru, langsung kena ke operator pabrik. Data produksi harian bisa rusak, susah di-recover. <strong>Staging = jaring pengaman</strong> — kamu coba dulu di sana, baru promote ke production saat yakin aman.</p>
+  </div>
+</section>
+
+<!-- ═══ SECTION 2: ARSITEKTUR ═══ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-num">2</div>
+    <div class="section-title">Arsitektur — 1 repo, 2 branch, 2 worker, 2 database</div>
+  </div>
+  <p class="section-lead">Satu kode sumber (1 repo), tapi punya dua "jalur paralel" yang masing-masing punya alamat sendiri dan database sendiri. Kode-nya identik — yang membedakan cuma alamat target server.</p>
+
+  <div class="arch">
+    <div class="arch-row-label">Source code (sama untuk staging & prod)</div>
+    <div class="arch-stage">
+      <div class="arch-box repo" style="grid-column:1/-1;">
+        <div class="lbl">GitHub Repository</div>
+        <div class="nm">vsk-sistem</div>
+        <div class="meta">github.com/tevepees/vsk-sistem</div>
+      </div>
+    </div>
+
+    <div class="arch-row-label">Branch (siapa update, kapan)</div>
+    <div class="arch-stage">
+      <div class="arch-box branch">
+        <div class="lbl">Branch</div>
+        <div class="nm">staging</div>
+        <div class="meta">tempat eksperimen</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box branch">
+        <div class="lbl">Branch</div>
+        <div class="nm">main</div>
+        <div class="meta">code yang sudah lulus tes</div>
+      </div>
+    </div>
+
+    <div class="arch-row-label">Cloudflare Worker (alamat web)</div>
+    <div class="arch-stage">
+      <div class="arch-box worker staging">
+        <div class="lbl">Worker</div>
+        <div class="nm">vsk-sistem-staging</div>
+        <div class="meta">vsk-sistem-staging.workers.dev</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box worker">
+        <div class="lbl">Worker</div>
+        <div class="nm">vsk-sistem</div>
+        <div class="meta">vsk-sistem.workers.dev</div>
+      </div>
+    </div>
+
+    <div class="arch-row-label">Backend & Database (terpisah penuh)</div>
+    <div class="arch-stage">
+      <div class="arch-box db">
+        <div class="lbl">Apps Script + Spreadsheet</div>
+        <div class="nm">[Staging] VSK Database</div>
+        <div class="meta">id: 1Ndm4YMC...</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box db">
+        <div class="lbl">Apps Script + Spreadsheet</div>
+        <div class="nm">VSK Produksi Database</div>
+        <div class="meta">id: 1evJ9Eo3...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-detect">
+    <div class="arch-detect-icon">🔍</div>
+    <div class="arch-detect-text">
+      <strong>Cara frontend tahu dia "staging" atau "prod":</strong> dia baca alamat dirinya sendiri.
+      Kalau <code>location.hostname</code> mengandung kata <code>staging</code> → pakai URL Apps Script staging.
+      Selain itu → pakai URL prod. <strong>Kode-nya sama persis</strong>, hanya hostname yang berbeda.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECTION 3: WORKFLOW HARIAN ═══ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-num">3</div>
+    <div class="section-title">Workflow harian — cara kerja yang aman</div>
+  </div>
+  <p class="section-lead">Setiap kali kamu mau update sesuatu (fix bug, tambah fitur, ganti warna), ikuti 5 langkah ini. Tidak ada step yang bisa di-skip kalau kamu mau aman.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <h4>Pindah ke branch staging</h4>
+        <p>Pastikan kamu kerja di branch <code>staging</code>, bukan <code>main</code>. Branch <code>main</code> hanya untuk kode yang sudah lulus tes.</p>
+        <code class="flow-cmd">git checkout staging</code>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <h4>Edit kode, commit, push</h4>
+        <p>Buat perubahan yang kamu mau (mis. tambah fitur). Commit dengan pesan jelas, lalu push.</p>
+        <code class="flow-cmd"><span class="comment"># di terminal, di folder repo</span><br>git add .<br>git commit -m "tambah field catatan di kedatangan"<br>git push origin staging</code>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <h4>Deploy ke staging worker</h4>
+        <p>Kirim kode ke Cloudflare Workers — target staging. Tunggu sampai selesai (biasanya &lt;30 detik).</p>
+        <code class="flow-cmd">npx wrangler deploy --env staging</code>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-num warn">4</div>
+      <div class="flow-content">
+        <h4>Buka URL staging, test sungguh-sungguh</h4>
+        <p>Buka <code>vsk-sistem-staging.workers.dev</code> di browser. Coba semua skenario yang relevan: input shift, timbang karung, switch modul, dst. <strong>Pastikan tidak ada error di console</strong> (F12 → Console). Kalau ada bug, balik ke step 2.</p>
+        <p style="color:var(--amber);font-weight:600;font-size:12px;margin-top:6px;">⚠ Test di staging WAJIB. Kalau di-skip, bug bisa lolos ke production.</p>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-content">
+        <h4>Promote ke production: merge & deploy</h4>
+        <p>Setelah yakin staging stabil, gabungkan branch <code>staging</code> ke <code>main</code>, lalu deploy ke production worker.</p>
+        <code class="flow-cmd">git checkout main<br>git merge staging<br>git push origin main<br>npx wrangler deploy --env production</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SECTION 4: CHEAT SHEET ═══ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-num">4</div>
+    <div class="section-title">Cheat sheet — perintah yang sering dipakai</div>
+  </div>
+  <p class="section-lead">Print atau bookmark halaman ini. Kalau ragu, balik kemari.</p>
+
+  <div class="cheat">
+<span class="cm"># ─── Setup awal (sekali saja per komputer) ───</span>
+<span class="pr">$</span> <span class="ct">git clone</span> https://github.com/tevepees/vsk-sistem.git
+<span class="pr">$</span> <span class="ct">cd</span> vsk-sistem
+<span class="pr">$</span> <span class="ct">npm install</span> -g wrangler
+<span class="pr">$</span> <span class="ct">wrangler login</span>
+
+<span class="cm"># ─── Mulai kerja: pindah ke staging ───</span>
+<span class="pr">$</span> <span class="ct">git checkout</span> <span class="gn">staging</span>
+<span class="pr">$</span> <span class="ct">git pull</span>
+
+<span class="cm"># ─── Setelah edit kode ───</span>
+<span class="pr">$</span> <span class="ct">git status</span>                              <span class="cm"># cek file mana yang berubah</span>
+<span class="pr">$</span> <span class="ct">git add</span> .
+<span class="pr">$</span> <span class="ct">git commit</span> -m <span class="gn">"deskripsi perubahan"</span>
+<span class="pr">$</span> <span class="ct">git push origin</span> <span class="gn">staging</span>
+
+<span class="cm"># ─── Deploy STAGING (uji coba) ───</span>
+<span class="pr">$</span> <span class="ct">npx wrangler deploy</span> --env <span class="gn">staging</span>
+
+<span class="cm"># ─── Deploy PRODUCTION (live, hati-hati!) ───</span>
+<span class="pr">$</span> <span class="ct">git checkout</span> <span class="gn">main</span>
+<span class="pr">$</span> <span class="ct">git merge</span> <span class="gn">staging</span>
+<span class="pr">$</span> <span class="ct">git push origin</span> <span class="gn">main</span>
+<span class="pr">$</span> <span class="ct">npx wrangler deploy</span> --env <span class="gn">production</span>
+
+<span class="cm"># ─── Lihat log live (kalau ada error di prod) ───</span>
+<span class="pr">$</span> <span class="ct">npx wrangler tail</span> --env <span class="gn">production</span>
+  </div>
+</section>
+
+<!-- ═══ SECTION 5: FAQ ═══ -->
+<section class="section">
+  <div class="section-head">
+    <div class="section-num">5</div>
+    <div class="section-title">FAQ untuk pemula SDLC</div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-item">
+      <div class="faq-q">Bagaimana kalau salah deploy ke production?</div>
+      <div class="faq-a">Jangan panik. Kalau code di branch <code>main</code> sebelum perubahan masih bagus, kamu bisa <code>git revert</code> dan deploy ulang. Lebih aman lagi: sebelum deploy prod, pastikan branch <code>main</code> isinya identik dengan apa yang sudah lulus uji di staging.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Kenapa harus 2 branch? Kenapa bukan langsung edit di main?</div>
+      <div class="faq-a">Karena branch <code>main</code> = kontrak dengan production. Setiap commit di sana harusnya artinya "kode ini sudah lulus tes". Kalau langsung edit, semua eksperimen ada di sejarah <code>main</code> — dan kalau lupa, satu push tidak sengaja bisa rusakkan production.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Apa beda <span class="pill amber">--env staging</span> dan <span class="pill green">--env production</span>?</div>
+      <div class="faq-a">Cuma flag — tapi flag inilah yang menentukan worker mana yang di-update. <code>--env staging</code> kirim ke <code>vsk-sistem-staging</code>, <code>--env production</code> kirim ke <code>vsk-sistem</code>. Kalau lupa flag, wrangler akan tanya / error. Sengaja begitu supaya kamu tidak salah target.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Apakah perlu deploy backend (Apps Script) tiap kali?</div>
+      <div class="faq-a">Tidak — frontend dan backend deploy-nya terpisah. Backend Apps Script v6 sudah live di kedua spreadsheet. Yang sering kamu deploy adalah frontend (HTML/CSS/JS via wrangler). Backend di-update hanya kalau kamu ubah file <code>VSK_AppsScript_v6.js</code> — itu lewat Google Apps Script editor, bukan wrangler.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Kalau mau coba di laptop tanpa deploy, bisa?</div>
+      <div class="faq-a">Bisa. Buka file <code>index.html</code> langsung di browser (double-click). Karena hostname jadi <code>localhost</code> atau <code>file://</code>, env detection akan auto-pilih staging. Tidak perlu deploy apa-apa untuk preview UI.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Kapan harus update versi service worker (sw.js)?</div>
+      <div class="faq-a">Setiap kali ada perubahan besar di frontend yang kamu mau pastikan user terima fresh, naikkan <code>const CACHE = 'vsk-sistem-vN'</code> ke versi berikutnya (v1 → v2). Browser akan invalidate cache lama otomatis.</div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  VSK Sistem · Building Value from Every Source<br>
+  Panduan ini dipersiapkan untuk fase belajar SDLC. Kalau ada bagian yang masih bingung — tanya saja.
+</div>
+
+</div>
+</body>
+</html>

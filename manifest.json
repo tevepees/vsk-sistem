@@ -1,0 +1,17 @@
+{
+  "name": "VSK Sistem — Varian Sumber Karya",
+  "short_name": "VSK Sistem",
+  "description": "Sistem Operasional VSK — Modul Produksi & Bahan Baku Cocopeat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8f4",
+  "theme_color": "#faf8f4",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230b1209' rx='24'/><text y='130' x='96' font-size='110' text-anchor='middle' font-family='monospace' fill='%234ade80'>V</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
