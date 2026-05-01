@@ -434,20 +434,26 @@ tbody tr:hover td{background:var(--cream);}
       </div>
     </div>
 
-    <div class="sec"><span class="sec-title">Hasil produksi</span><span class="sec-line"></span></div>
-    <div class="grid2">
-      <div class="field">
-        <label class="f-label">Hasil kering</label>
-        <div class="f-wrap"><input type="number" id="inp-kering" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
-      </div>
-      <div class="field">
-        <label class="f-label">Block diproduksi</label>
-        <div class="f-wrap"><input type="number" id="inp-block" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
-      </div>
+    <div class="sec"><span class="sec-title">Hasil pengeringan</span><span class="sec-line"></span></div>
+    <div class="field">
+      <label class="f-label">Hasil kering</label>
+      <div class="f-wrap"><input type="number" id="inp-kering" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
     </div>
     <div class="susut-row" id="susut-row" style="opacity:.45">
       <span class="susut-lbl">Susut penjemuran</span>
       <span class="susut-num" id="susut-val">—</span>
+    </div>
+
+    <div class="sec"><span class="sec-title">Block diproduksi</span><span class="sec-line"></span><span class="sec-tag">Total = High + Low</span></div>
+    <div class="grid2">
+      <div class="field">
+        <label class="f-label">Block High EC</label>
+        <div class="f-wrap"><input type="number" id="inp-block-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Block Low EC</label>
+        <div class="f-wrap"><input type="number" id="inp-block-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
+      </div>
     </div>
 
     <div class="sec"><span class="sec-title">Catatan</span><span class="sec-line"></span><span class="sec-tag">opsional</span></div>
@@ -500,8 +506,8 @@ tbody tr:hover td{background:var(--cream);}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Tanggal</th><th>Shift</th><th>Karung</th><th>Kering (kg)</th><th>Block</th><th>Susut</th></tr></thead>
-        <tbody id="hist-body"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr></tbody>
+        <thead><tr><th>Tanggal</th><th>Shift</th><th>Karung</th><th>Basah (kg)</th><th>Kering (kg)</th><th>Block</th><th>Susut</th></tr></thead>
+        <tbody id="hist-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -845,12 +851,14 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   async function submitShift(){
-    var op     = $('inp-op').value.trim();
-    var karung = parseFloat($('inp-karung').value) || 0;
-    var basah  = parseFloat($('inp-basah').value)  || 0;
-    var kering = parseFloat($('inp-kering').value) || 0;
-    var block  = parseFloat($('inp-block').value)  || 0;
-    var notes  = $('inp-notes-prod').value.trim();
+    var op        = $('inp-op').value.trim();
+    var karung    = parseFloat($('inp-karung').value)     || 0;
+    var basah     = parseFloat($('inp-basah').value)      || 0;
+    var kering    = parseFloat($('inp-kering').value)     || 0;
+    var blockHigh = parseFloat($('inp-block-high').value) || 0;
+    var blockLow  = parseFloat($('inp-block-low').value)  || 0;
+    var block     = blockHigh + blockLow;
+    var notes     = $('inp-notes-prod').value.trim();
 
     if(!op){ toast('Isi nama operator dulu', 'err'); return; }
     if(!karung && !basah && !block){ toast('Isi minimal satu data produksi', 'err'); return; }
@@ -859,7 +867,8 @@ tbody tr:hover td{background:var(--cream);}
       date: window.VSK.todayStr(),
       shift: currentShift,
       operator: op,
-      karung: karung, basah: basah, kering: kering, block: block,
+      karung: karung, basah: basah, kering: kering,
+      block: block, blockHigh: blockHigh, blockLow: blockLow,
       notes: notes,
       time: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})
     };
@@ -877,7 +886,7 @@ tbody tr:hover td{background:var(--cream);}
       });
       toast('Data shift ' + currentShift + ' tersimpan ✓', 'ok');
 
-      ['inp-op','inp-karung','inp-basah','inp-kering','inp-block','inp-notes-prod'].forEach(function(id){
+      ['inp-op','inp-karung','inp-basah','inp-kering','inp-block-high','inp-block-low','inp-notes-prod'].forEach(function(id){
         var el = $(id); if(el) el.value = '';
       });
       calcSusut();
@@ -939,6 +948,11 @@ tbody tr:hover td{background:var(--cream);}
 
     entries.sort(function(a,b){ return a.shift === 'pagi' ? -1 : 1; });
     wrap.innerHTML = entries.map(function(e){
+      var bh = e.blockHigh || 0, bl = e.blockLow || 0;
+      var hasBreak = (bh + bl) > 0;
+      var blockLbl = 'Block (pcs)' + (hasBreak
+        ? '<br><span style="font-size:9px;color:var(--sand)">H:' + bh + ' / L:' + bl + '</span>'
+        : '');
       return '<div class="log-card">' +
         '<div class="log-head">' +
           '<div class="log-badge">' +
@@ -951,18 +965,22 @@ tbody tr:hover td{background:var(--cream);}
           '<div class="ls"><div class="ls-val">' + e.karung + '</div><div class="ls-lbl">Karung</div></div>' +
           '<div class="ls"><div class="ls-val">' + e.basah  + '</div><div class="ls-lbl">Basah (kg)</div></div>' +
           '<div class="ls"><div class="ls-val">' + e.kering + '</div><div class="ls-lbl">Kering (kg)</div></div>' +
-          '<div class="ls"><div class="ls-val green">' + e.block + '</div><div class="ls-lbl">Block (pcs)</div></div>' +
+          '<div class="ls"><div class="ls-val green">' + e.block + '</div><div class="ls-lbl">' + blockLbl + '</div></div>' +
         '</div>' +
         (e.notes ? '<div class="log-note">' + e.notes + '</div>' : '') +
       '</div>';
     }).join('');
 
-    rekapCache = {entries: entries, tK: tK, tB: tB, tKg: tKg, tBl: tBl, susut: susut, pctBlock: pctBlock};
+    // Aggregate breakdown untuk export WhatsApp
+    var tBh = entries.reduce(function(s,e){ return s + (parseFloat(e.blockHigh)||0); }, 0);
+    var tBl_low = entries.reduce(function(s,e){ return s + (parseFloat(e.blockLow)||0); }, 0);
+
+    rekapCache = {entries: entries, tK: tK, tB: tB, tKg: tKg, tBl: tBl, tBh: tBh, tBl_low: tBl_low, susut: susut, pctBlock: pctBlock};
   }
 
   async function renderHistory(){
     var tb = $('hist-body');
-    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr>';
 
     var rows = [];
     try {
@@ -970,23 +988,28 @@ tbody tr:hover td{background:var(--cream);}
       var json = await res.json();
       if(json.ok) rows = json.rows || [];
     } catch(err){
-      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">Gagal memuat. Periksa koneksi.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--rose)">Gagal memuat. Periksa koneksi.</td></tr>';
       return;
     }
 
     if(!rows.length){
-      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Belum ada riwayat.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Belum ada riwayat.</td></tr>';
       return;
     }
 
     tb.innerHTML = rows.map(function(r){
       var susut = r.basah > 0 ? ((r.basah-r.kering)/r.basah*100).toFixed(1) + '%' : '—';
+      var bh = r.blockHigh || 0, bl = r.blockLow || 0;
+      var blockCell = r.block + (bh + bl > 0
+        ? ' <span style="color:var(--sand);font-size:10px">(H:' + bh + '/L:' + bl + ')</span>'
+        : '');
       return '<tr>' +
         '<td>' + r.date + '</td>' +
         '<td>' + (r.shifts || []).join(', ') + '</td>' +
         '<td>' + r.karung + '</td>' +
+        '<td>' + r.basah.toFixed(1) + '</td>' +
         '<td>' + r.kering.toFixed(1) + '</td>' +
-        '<td class="c-leaf">' + r.block + '</td>' +
+        '<td class="c-leaf">' + blockCell + '</td>' +
         '<td class="c-amber">' + susut + '</td>' +
       '</tr>';
     }).join('');
@@ -998,12 +1021,16 @@ tbody tr:hover td{background:var(--cream);}
     var d = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
     var sorted = c.entries.slice().sort(function(a,b){ return a.shift === 'pagi' ? -1 : 1; });
     var lines = sorted.map(function(e){
+      var bh = e.blockHigh || 0, bl = e.blockLow || 0;
+      var blockTxt = e.block + ' pcs' + ((bh+bl) > 0 ? ' (H:' + bh + '/L:' + bl + ')' : '');
       var base = '  [' + String(e.shift).toUpperCase() + '] ' + e.operator + ': ' +
-        e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + e.block + ' pcs';
+        e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + blockTxt;
       return e.notes ? base + '\n  📌 ' + e.notes : base;
     }).join('\n\n');
+    var blockLine = '🧱 Block   : *' + c.tBl + ' pcs* (' + c.pctBlock + '%)' +
+      ((c.tBh + c.tBl_low) > 0 ? '\n   ↳ High EC: ' + c.tBh + ' · Low EC: ' + c.tBl_low : '');
     var msg = '📊 *LAPORAN PRODUKSI — VSK*\n━━━━━━━━━━━━━━━━━\n📅 ' + d + '\n\n' +
-      '🧱 Block   : *' + c.tBl + ' pcs* (' + c.pctBlock + '%)\n' +
+      blockLine + '\n' +
       '📦 Karung  : ' + c.tK + ' krg\n' +
       '💧 Basah   : ' + c.tB + ' kg\n' +
       '☀️ Kering  : ' + c.tKg + ' kg\n' +
