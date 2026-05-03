@@ -319,6 +319,68 @@ tbody tr:hover td{background:var(--cream);}
 .drawer-body{padding:18px 20px;overflow-y:auto;}
 
 /* ═══════════════════════════════════════════════════════════
+   V8 — EC SPLIT COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* EC cards — side-by-side (Stock + Rekap) */
+.ec-card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ec-card{background:white;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.ec-card.high{border-left:3px solid var(--leaf);}
+.ec-card.low{border-left:3px solid var(--amber);}
+.ec-card-tag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.ec-card.high .ec-card-tag{color:var(--leaf);}
+.ec-card.low  .ec-card-tag{color:var(--amber);}
+.ec-card-saldo{font-family:var(--serif);font-size:30px;font-weight:600;color:var(--char);letter-spacing:-0.02em;line-height:1;margin-bottom:10px;}
+.ec-card-saldo sup{font-size:13px;color:var(--sand);font-weight:400;margin-left:3px;}
+.ec-card-saldo.neg{color:var(--rose);}
+.ec-card-stats{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:11px;color:var(--brown);}
+.ec-card-stats strong{color:var(--char);font-weight:600;}
+.ec-card-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:4px;}
+.ec-card-stats-grid > div{display:flex;flex-direction:column;gap:2px;}
+.ec-card-stats-grid .lbl{font-size:9px;color:var(--stone);text-transform:uppercase;letter-spacing:0.06em;}
+.ec-card-stats-grid .val{font-family:var(--mono);font-size:15px;color:var(--char);font-weight:600;}
+
+/* EC pill — small badge (untuk batch card, header section, dll) */
+.ec-pill{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:99px;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;}
+.ec-pill.high{background:var(--leaf-bg);color:var(--leaf);}
+.ec-pill.low{background:var(--amber-bg);color:var(--amber);}
+.ec-pill.mixed{background:var(--cream2);color:var(--brown);}
+
+/* EC radio — pilih saat mulai batch */
+.ec-radio-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ec-radio{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:white;cursor:pointer;transition:all .15s;font-family:var(--sans);font-size:14px;font-weight:600;color:var(--brown);user-select:none;touch-action:manipulation;}
+.ec-radio:hover{border-color:var(--leaf2);}
+.ec-radio input{display:none;}
+.ec-radio.high.selected{border-color:var(--leaf);background:var(--leaf-bg);color:var(--leaf);}
+.ec-radio.low.selected{border-color:var(--amber);background:var(--amber-bg);color:var(--amber);}
+
+/* Batch tags container */
+.batch-tags{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+
+/* Riwayat card style (Modul Produksi) */
+.riwayat-stack{display:flex;flex-direction:column;gap:10px;}
+.riwayat-card{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.rc-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--cream2);}
+.rc-date{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--char);}
+.rc-shifts{font-family:var(--mono);font-size:10px;color:var(--sand);}
+.rc-ec-row{padding:11px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--cream2);}
+.rc-ec-row:last-child{border-bottom:none;}
+.rc-ec-row.high{background:linear-gradient(90deg, var(--leaf-bg) 0%, transparent 36%);}
+.rc-ec-row.low{background:linear-gradient(90deg, var(--amber-bg) 0%, transparent 36%);}
+.rc-ec-tag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+.rc-ec-row.high .rc-ec-tag{background:var(--leaf);color:white;}
+.rc-ec-row.low  .rc-ec-tag{background:var(--amber);color:white;}
+.rc-ec-row.legacy .rc-ec-tag{background:var(--sand);color:white;}
+.rc-stats{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--mono);font-size:11px;}
+.rc-stats span{color:var(--brown);}
+.rc-stats span strong{color:var(--char);font-weight:600;}
+
+/* Responsive overrides untuk ec-card-row di layar sempit */
+@media (max-width: 720px){
+  .ec-card-row{grid-template-columns:1fr;}
+}
+
+/* ═══════════════════════════════════════════════════════════
    RESPONSIVE — collapse sidebar pada layar sempit
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 720px){
@@ -422,38 +484,49 @@ tbody tr:hover td{background:var(--cream);}
       <div class="f-wrap"><input type="text" id="inp-op" class="no-unit" placeholder="Nama lengkap" autocomplete="name"></div>
     </div>
 
-    <div class="sec"><span class="sec-title">Bahan baku</span><span class="sec-line"></span></div>
+    <div class="sec"><span class="sec-title">Produksi High EC</span><span class="sec-line"></span><span class="ec-pill high">High</span></div>
     <div class="grid2">
       <div class="field">
-        <label class="f-label">Jumlah karung</label>
-        <div class="f-wrap"><input type="number" id="inp-karung" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
+        <label class="f-label">Karung dijemur</label>
+        <div class="f-wrap"><input type="number" id="inp-karung-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
       </div>
       <div class="field">
         <label class="f-label">Bahan basah</label>
-        <div class="f-wrap"><input type="number" id="inp-basah" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+        <div class="f-wrap"><input type="number" id="inp-basah-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
       </div>
-    </div>
-
-    <div class="sec"><span class="sec-title">Hasil pengeringan</span><span class="sec-line"></span></div>
-    <div class="field">
-      <label class="f-label">Hasil kering</label>
-      <div class="f-wrap"><input type="number" id="inp-kering" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
-    </div>
-    <div class="susut-row" id="susut-row" style="opacity:.45">
-      <span class="susut-lbl">Susut penjemuran</span>
-      <span class="susut-num" id="susut-val">—</span>
-    </div>
-
-    <div class="sec"><span class="sec-title">Block diproduksi</span><span class="sec-line"></span><span class="sec-tag">Total = High + Low</span></div>
-    <div class="grid2">
       <div class="field">
-        <label class="f-label">Block High EC</label>
+        <label class="f-label">Hasil kering</label>
+        <div class="f-wrap"><input type="number" id="inp-kering-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Block jadi</label>
         <div class="f-wrap"><input type="number" id="inp-block-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
       </div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Produksi Low EC</span><span class="sec-line"></span><span class="ec-pill low">Low</span></div>
+    <div class="grid2">
       <div class="field">
-        <label class="f-label">Block Low EC</label>
+        <label class="f-label">Karung dijemur</label>
+        <div class="f-wrap"><input type="number" id="inp-karung-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Bahan basah</label>
+        <div class="f-wrap"><input type="number" id="inp-basah-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Hasil kering</label>
+        <div class="f-wrap"><input type="number" id="inp-kering-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Block jadi</label>
         <div class="f-wrap"><input type="number" id="inp-block-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
       </div>
+    </div>
+
+    <div class="susut-row" id="susut-row" style="opacity:.45">
+      <span class="susut-lbl">Susut penjemuran (total)</span>
+      <span class="susut-num" id="susut-val">—</span>
     </div>
 
     <div class="sec"><span class="sec-title">Catatan</span><span class="sec-line"></span><span class="sec-tag">opsional</span></div>
@@ -471,10 +544,25 @@ tbody tr:hover td{background:var(--cream);}
       <div class="hero-val" id="r-block">—<sup>pcs</sup></div>
       <div class="hero-sub" id="r-sub">Memuat data...</div>
     </div>
-    <div class="stat-row">
-      <div class="stat"><div class="stat-val" id="r-karung">—</div><div class="stat-lbl">Karung</div><div class="stat-unit">digunakan</div></div>
-      <div class="stat"><div class="stat-val" id="r-basah">—</div><div class="stat-lbl">Basah</div><div class="stat-unit">kg</div></div>
-      <div class="stat"><div class="stat-val" id="r-kering">—</div><div class="stat-lbl">Kering</div><div class="stat-unit">kg</div></div>
+    <div class="ec-card-row">
+      <div class="ec-card high">
+        <div class="ec-card-tag">High EC</div>
+        <div class="ec-card-stats-grid">
+          <div><span class="lbl">Karung</span><span class="val" id="r-karung-high">—</span></div>
+          <div><span class="lbl">Basah (kg)</span><span class="val" id="r-basah-high">—</span></div>
+          <div><span class="lbl">Kering (kg)</span><span class="val" id="r-kering-high">—</span></div>
+          <div><span class="lbl">Block (pcs)</span><span class="val" id="r-block-high">—</span></div>
+        </div>
+      </div>
+      <div class="ec-card low">
+        <div class="ec-card-tag">Low EC</div>
+        <div class="ec-card-stats-grid">
+          <div><span class="lbl">Karung</span><span class="val" id="r-karung-low">—</span></div>
+          <div><span class="lbl">Basah (kg)</span><span class="val" id="r-basah-low">—</span></div>
+          <div><span class="lbl">Kering (kg)</span><span class="val" id="r-kering-low">—</span></div>
+          <div><span class="lbl">Block (pcs)</span><span class="val" id="r-block-low">—</span></div>
+        </div>
+      </div>
     </div>
     <div class="prog-card">
       <div class="prog-head"><span class="prog-lbl">Block vs Target</span><span class="prog-pct" id="r-pct">—</span></div>
@@ -504,11 +592,8 @@ tbody tr:hover td{background:var(--cream);}
       <span class="sec-line"></span>
       <button class="sec-refresh" id="btn-refresh-history" type="button">↻ refresh</button>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Tanggal</th><th>Shift</th><th>Karung</th><th>Basah (kg)</th><th>Kering (kg)</th><th>Block</th><th>Susut</th></tr></thead>
-        <tbody id="hist-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr></tbody>
-      </table>
+    <div class="riwayat-stack" id="riwayat-prod-stack">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>
     </div>
   </div>
 </section>
@@ -557,6 +642,18 @@ tbody tr:hover td{background:var(--cream);}
         <div class="f-wrap"><input type="text" id="inp-suratjalan" class="no-unit" placeholder="SJ-..."></div>
       </div>
 
+      <div class="sec"><span class="sec-title">Jenis cocopeat</span><span class="sec-line"></span></div>
+      <div class="ec-radio-row">
+        <label class="ec-radio high" data-ec="high">
+          <input type="radio" name="ec-type" value="high">
+          <span>High EC</span>
+        </label>
+        <label class="ec-radio low selected" data-ec="low">
+          <input type="radio" name="ec-type" value="low" checked>
+          <span>Low EC</span>
+        </label>
+      </div>
+
       <div class="sec"><span class="sec-title">Catatan</span><span class="sec-line"></span><span class="sec-tag">opsional</span></div>
       <div class="f-wrap">
         <textarea id="inp-notes-rawmat" placeholder="Catatan kedatangan (kondisi, plat truk, dll)..."></textarea>
@@ -574,7 +671,10 @@ tbody tr:hover td{background:var(--cream);}
             <div class="batch-supplier" id="bc-supplier">Supplier</div>
             <div class="batch-meta" id="bc-meta">Operator · SJ-...</div>
           </div>
-          <span class="batch-status open">open</span>
+          <div class="batch-tags">
+            <span class="ec-pill low" id="bc-ec">low</span>
+            <span class="batch-status open">open</span>
+          </div>
         </div>
         <div class="batch-totals">
           <div class="bt-cell">
@@ -616,19 +716,27 @@ tbody tr:hover td{background:var(--cream);}
   <!-- Page: Stock -->
   <div class="page" id="page-stock">
     <div class="hero">
-      <div class="hero-label">Saldo stock cocopeat</div>
+      <div class="hero-label">Saldo total stock cocopeat</div>
       <div class="hero-val" id="st-saldo">—<sup>kg</sup></div>
       <div class="hero-sub" id="st-sub">Memuat data...</div>
     </div>
 
-    <div class="stat-row">
-      <div class="stat in">
-        <div class="stat-val" id="st-in">—</div>
-        <div class="stat-lbl">Total masuk <span class="stat-unit">kg</span></div>
+    <div class="ec-card-row">
+      <div class="ec-card high">
+        <div class="ec-card-tag">High EC</div>
+        <div class="ec-card-saldo" id="st-saldo-high">—<sup>kg</sup></div>
+        <div class="ec-card-stats">
+          <span>Masuk: <strong id="st-in-high">—</strong> kg <span style="color:var(--stone)">· <span id="st-in-high-krg">0</span> krg</span></span>
+          <span>Pakai: <strong id="st-out-high">—</strong> kg</span>
+        </div>
       </div>
-      <div class="stat out">
-        <div class="stat-val" id="st-out">—</div>
-        <div class="stat-lbl">Terpakai produksi <span class="stat-unit">kg</span></div>
+      <div class="ec-card low">
+        <div class="ec-card-tag">Low EC</div>
+        <div class="ec-card-saldo" id="st-saldo-low">—<sup>kg</sup></div>
+        <div class="ec-card-stats">
+          <span>Masuk: <strong id="st-in-low">—</strong> kg <span style="color:var(--stone)">· <span id="st-in-low-krg">0</span> krg</span></span>
+          <span>Pakai: <strong id="st-out-low">—</strong> kg</span>
+        </div>
       </div>
     </div>
 
@@ -651,8 +759,8 @@ tbody tr:hover td{background:var(--cream);}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Tanggal</th><th>Supplier</th><th>Karung</th><th>Berat (kg)</th><th>Status</th></tr></thead>
-        <tbody id="riwayat-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr></tbody>
+        <thead><tr><th>Tanggal</th><th>Supplier</th><th>EC</th><th>Karung</th><th>Berat (kg)</th><th>Status</th></tr></thead>
+        <tbody id="riwayat-body"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -837,8 +945,10 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   function calcSusut(){
-    var b = parseFloat($('inp-basah').value) || 0;
-    var k = parseFloat($('inp-kering').value) || 0;
+    var b = (parseFloat($('inp-basah-high').value)  || 0)
+          + (parseFloat($('inp-basah-low').value)   || 0);
+    var k = (parseFloat($('inp-kering-high').value) || 0)
+          + (parseFloat($('inp-kering-low').value)  || 0);
     var row = $('susut-row');
     var val = $('susut-val');
     if(b > 0 && k > 0 && k <= b){
@@ -851,14 +961,22 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   async function submitShift(){
-    var op        = $('inp-op').value.trim();
-    var karung    = parseFloat($('inp-karung').value)     || 0;
-    var basah     = parseFloat($('inp-basah').value)      || 0;
-    var kering    = parseFloat($('inp-kering').value)     || 0;
-    var blockHigh = parseFloat($('inp-block-high').value) || 0;
-    var blockLow  = parseFloat($('inp-block-low').value)  || 0;
-    var block     = blockHigh + blockLow;
-    var notes     = $('inp-notes-prod').value.trim();
+    var op       = $('inp-op').value.trim();
+    var karungH  = parseFloat($('inp-karung-high').value) || 0;
+    var karungL  = parseFloat($('inp-karung-low').value)  || 0;
+    var basahH   = parseFloat($('inp-basah-high').value)  || 0;
+    var basahL   = parseFloat($('inp-basah-low').value)   || 0;
+    var keringH  = parseFloat($('inp-kering-high').value) || 0;
+    var keringL  = parseFloat($('inp-kering-low').value)  || 0;
+    var blockH   = parseFloat($('inp-block-high').value)  || 0;
+    var blockL   = parseFloat($('inp-block-low').value)   || 0;
+
+    var karung = karungH + karungL;
+    var basah  = basahH  + basahL;
+    var kering = keringH + keringL;
+    var block  = blockH  + blockL;
+
+    var notes = $('inp-notes-prod').value.trim();
 
     if(!op){ toast('Isi nama operator dulu', 'err'); return; }
     if(!karung && !basah && !block){ toast('Isi minimal satu data produksi', 'err'); return; }
@@ -867,8 +985,10 @@ tbody tr:hover td{background:var(--cream);}
       date: window.VSK.todayStr(),
       shift: currentShift,
       operator: op,
-      karung: karung, basah: basah, kering: kering,
-      block: block, blockHigh: blockHigh, blockLow: blockLow,
+      karung: karung, karungHigh: karungH, karungLow: karungL,
+      basah: basah,   basahHigh: basahH,   basahLow: basahL,
+      kering: kering, keringHigh: keringH, keringLow: keringL,
+      block: block,   blockHigh: blockH,   blockLow: blockL,
       notes: notes,
       time: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})
     };
@@ -886,7 +1006,12 @@ tbody tr:hover td{background:var(--cream);}
       });
       toast('Data shift ' + currentShift + ' tersimpan ✓', 'ok');
 
-      ['inp-op','inp-karung','inp-basah','inp-kering','inp-block-high','inp-block-low','inp-notes-prod'].forEach(function(id){
+      ['inp-op',
+       'inp-karung-high','inp-karung-low',
+       'inp-basah-high','inp-basah-low',
+       'inp-kering-high','inp-kering-low',
+       'inp-block-high','inp-block-low',
+       'inp-notes-prod'].forEach(function(id){
         var el = $(id); if(el) el.value = '';
       });
       calcSusut();
@@ -917,6 +1042,12 @@ tbody tr:hover td{background:var(--cream);}
 
     function tot(k){ return entries.reduce(function(s,e){ return s + (parseFloat(e[k])||0); }, 0); }
     var tK = tot('karung'), tB = tot('basah'), tKg = tot('kering'), tBl = tot('block');
+    // EC breakdown
+    var tKh  = tot('karungHigh'), tKl  = tot('karungLow');
+    var tBh  = tot('basahHigh'),  tBll = tot('basahLow');
+    var tKgh = tot('keringHigh'), tKgl = tot('keringLow');
+    var tBlh = tot('blockHigh'),  tBlw = tot('blockLow');
+
     var susut     = tB > 0 ? ((tB-tKg)/tB*100).toFixed(1) + '%' : '—';
     var pctBlock  = tBl > 0 ? Math.min(Math.round(tBl/TARGET_BLOCK*100),  999) : 0;
     var pctKering = tKg > 0 ? Math.min(Math.round(tKg/TARGET_KERING*100), 999) : 0;
@@ -926,9 +1057,17 @@ tbody tr:hover td{background:var(--cream);}
     $('r-sub').textContent = entries.length
       ? pctBlock + '% dari target 60 pcs · ' + entries.length + ' shift masuk'
       : 'Belum ada data hari ini';
-    $('r-karung').textContent     = tK;
-    $('r-basah').textContent      = tB.toFixed(1);
-    $('r-kering').textContent     = tKg.toFixed(1);
+
+    // EC cards
+    $('r-karung-high').textContent = tKh;
+    $('r-karung-low').textContent  = tKl;
+    $('r-basah-high').textContent  = tBh.toFixed(1);
+    $('r-basah-low').textContent   = tBll.toFixed(1);
+    $('r-kering-high').textContent = tKgh.toFixed(1);
+    $('r-kering-low').textContent  = tKgl.toFixed(1);
+    $('r-block-high').textContent  = tBlh;
+    $('r-block-low').textContent   = tBlw;
+
     $('r-pct').textContent        = pctBlock + '%';
     $('r-susut').textContent      = susut;
     $('r-kering-pct').textContent = pctKering + '%';
@@ -971,16 +1110,20 @@ tbody tr:hover td{background:var(--cream);}
       '</div>';
     }).join('');
 
-    // Aggregate breakdown untuk export WhatsApp
-    var tBh = entries.reduce(function(s,e){ return s + (parseFloat(e.blockHigh)||0); }, 0);
-    var tBl_low = entries.reduce(function(s,e){ return s + (parseFloat(e.blockLow)||0); }, 0);
-
-    rekapCache = {entries: entries, tK: tK, tB: tB, tKg: tKg, tBl: tBl, tBh: tBh, tBl_low: tBl_low, susut: susut, pctBlock: pctBlock};
+    rekapCache = {
+      entries: entries,
+      tK: tK, tB: tB, tKg: tKg, tBl: tBl,
+      tKh: tKh, tKl: tKl,
+      tBh: tBh, tBll: tBll,
+      tKgh: tKgh, tKgl: tKgl,
+      tBlh: tBlh, tBlw: tBlw,
+      susut: susut, pctBlock: pctBlock
+    };
   }
 
   async function renderHistory(){
-    var tb = $('hist-body');
-    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr>';
+    var stack = $('riwayat-prod-stack');
+    stack.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>';
 
     var rows = [];
     try {
@@ -988,30 +1131,47 @@ tbody tr:hover td{background:var(--cream);}
       var json = await res.json();
       if(json.ok) rows = json.rows || [];
     } catch(err){
-      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--rose)">Gagal memuat. Periksa koneksi.</td></tr>';
+      stack.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-h">Gagal memuat</div><div class="empty-p">Periksa koneksi, lalu tap ↻ refresh</div></div>';
       return;
     }
 
     if(!rows.length){
-      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--stone)">Belum ada riwayat.</td></tr>';
+      stack.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-h">Belum ada riwayat</div></div>';
       return;
     }
 
-    tb.innerHTML = rows.map(function(r){
-      var susut = r.basah > 0 ? ((r.basah-r.kering)/r.basah*100).toFixed(1) + '%' : '—';
-      var bh = r.blockHigh || 0, bl = r.blockLow || 0;
-      var blockCell = r.block + (bh + bl > 0
-        ? ' <span style="color:var(--sand);font-size:10px">(H:' + bh + '/L:' + bl + ')</span>'
-        : '');
-      return '<tr>' +
-        '<td>' + r.date + '</td>' +
-        '<td>' + (r.shifts || []).join(', ') + '</td>' +
-        '<td>' + r.karung + '</td>' +
-        '<td>' + r.basah.toFixed(1) + '</td>' +
-        '<td>' + r.kering.toFixed(1) + '</td>' +
-        '<td class="c-leaf">' + blockCell + '</td>' +
-        '<td class="c-amber">' + susut + '</td>' +
-      '</tr>';
+    function susutOf(b, k){
+      return b > 0 ? ((b-k)/b*100).toFixed(1) + '%' : '—';
+    }
+    function ecBlock(label, klass, krg, bas, ker, blk){
+      return '<div class="rc-ec-row ' + klass + '">' +
+        '<span class="rc-ec-tag">' + label + '</span>' +
+        '<div class="rc-stats">' +
+          '<span><strong>' + krg + '</strong> krg</span>' +
+          '<span><strong>' + bas.toFixed(1) + '</strong> kg basah</span>' +
+          '<span><strong>' + ker.toFixed(1) + '</strong> kg kering</span>' +
+          '<span><strong>' + blk + '</strong> block</span>' +
+          '<span>susut <strong>' + susutOf(bas, ker) + '</strong></span>' +
+        '</div>' +
+      '</div>';
+    }
+
+    stack.innerHTML = rows.map(function(r){
+      var hasHigh = (r.karungHigh + r.basahHigh + r.keringHigh + r.blockHigh) > 0;
+      var hasLow  = (r.karungLow  + r.basahLow  + r.keringLow  + r.blockLow)  > 0;
+      var ecRows = '';
+      if(hasHigh) ecRows += ecBlock('High EC', 'high', r.karungHigh, r.basahHigh, r.keringHigh, r.blockHigh);
+      if(hasLow)  ecRows += ecBlock('Low EC',  'low',  r.karungLow,  r.basahLow,  r.keringLow,  r.blockLow);
+      // Fallback: data legacy yang tidak ter-tag (harusnya tidak ada setelah migrasi v8, tapi jaga-jaga)
+      if(!ecRows) ecRows = ecBlock('Total', 'legacy', r.karung, r.basah, r.kering, r.block);
+
+      return '<div class="riwayat-card">' +
+        '<div class="rc-header">' +
+          '<span class="rc-date">' + r.date + '</span>' +
+          '<span class="rc-shifts">' + (r.shifts || []).join(' · ') + '</span>' +
+        '</div>' +
+        ecRows +
+      '</div>';
     }).join('');
   }
 
@@ -1021,21 +1181,28 @@ tbody tr:hover td{background:var(--cream);}
     var d = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
     var sorted = c.entries.slice().sort(function(a,b){ return a.shift === 'pagi' ? -1 : 1; });
     var lines = sorted.map(function(e){
-      var bh = e.blockHigh || 0, bl = e.blockLow || 0;
-      var blockTxt = e.block + ' pcs' + ((bh+bl) > 0 ? ' (H:' + bh + '/L:' + bl + ')' : '');
-      var base = '  [' + String(e.shift).toUpperCase() + '] ' + e.operator + ': ' +
-        e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + blockTxt;
-      return e.notes ? base + '\n  📌 ' + e.notes : base;
+      var hasHigh = (e.karungHigh + e.basahHigh + e.keringHigh + e.blockHigh) > 0;
+      var hasLow  = (e.karungLow  + e.basahLow  + e.keringLow  + e.blockLow)  > 0;
+      var head = '  [' + String(e.shift).toUpperCase() + '] ' + e.operator;
+      var body = '';
+      if(hasHigh) body += '\n     🟢 H: ' + e.karungHigh + ' krg | ' + e.basahHigh + ' kg basah | ' + e.keringHigh + ' kg kering | ' + e.blockHigh + ' pcs';
+      if(hasLow)  body += '\n     🟡 L: ' + e.karungLow  + ' krg | ' + e.basahLow  + ' kg basah | ' + e.keringLow  + ' kg kering | ' + e.blockLow  + ' pcs';
+      if(!body) body = '\n     ' + e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + e.block + ' pcs';
+      return head + body + (e.notes ? '\n     📌 ' + e.notes : '');
     }).join('\n\n');
-    var blockLine = '🧱 Block   : *' + c.tBl + ' pcs* (' + c.pctBlock + '%)' +
-      ((c.tBh + c.tBl_low) > 0 ? '\n   ↳ High EC: ' + c.tBh + ' · Low EC: ' + c.tBl_low : '');
+
     var msg = '📊 *LAPORAN PRODUKSI — VSK*\n━━━━━━━━━━━━━━━━━\n📅 ' + d + '\n\n' +
-      blockLine + '\n' +
-      '📦 Karung  : ' + c.tK + ' krg\n' +
-      '💧 Basah   : ' + c.tB + ' kg\n' +
-      '☀️ Kering  : ' + c.tKg + ' kg\n' +
-      '📉 Susut   : ' + c.susut + '\n\n' +
-      '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n_VSK Produksi System_';
+      '🟢 *HIGH EC*\n' +
+      '   📦 ' + c.tKh  + ' krg · 💧 ' + c.tBh.toFixed(1)  + ' kg basah · ☀️ ' + c.tKgh.toFixed(1) + ' kg kering · 🧱 ' + c.tBlh + ' pcs\n\n' +
+      '🟡 *LOW EC*\n' +
+      '   📦 ' + c.tKl  + ' krg · 💧 ' + c.tBll.toFixed(1) + ' kg basah · ☀️ ' + c.tKgl.toFixed(1) + ' kg kering · 🧱 ' + c.tBlw + ' pcs\n\n' +
+      '🧮 *TOTAL*\n' +
+      '   🧱 Block   : *' + c.tBl + ' pcs* (' + c.pctBlock + '% dari target)\n' +
+      '   📦 Karung  : ' + c.tK + ' krg\n' +
+      '   💧 Basah   : ' + c.tB + ' kg\n' +
+      '   ☀️ Kering  : ' + c.tKg + ' kg\n' +
+      '   📉 Susut   : ' + c.susut + '\n\n' +
+      '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n_VSK Sistem v8_';
 
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(msg).then(function(){ toast('Laporan disalin ✓', 'ok'); }).catch(function(){ alert(msg); });
@@ -1066,8 +1233,9 @@ tbody tr:hover td{background:var(--cream);}
       });
     }
 
-    $('inp-basah').addEventListener('input', calcSusut);
-    $('inp-kering').addEventListener('input', calcSusut);
+    ['inp-basah-high','inp-basah-low','inp-kering-high','inp-kering-low'].forEach(function(id){
+      var el = $(id); if(el) el.addEventListener('input', calcSusut);
+    });
     $('btn-submit').addEventListener('click', submitShift);
     $('btn-refresh-rekap').addEventListener('click', renderRekap);
     $('btn-refresh-history').addEventListener('click', renderHistory);
@@ -1198,17 +1366,37 @@ tbody tr:hover td{background:var(--cream);}
     $('inp-supplier').value   = '';
     $('inp-suratjalan').value = '';
     $('inp-notes-rawmat').value = '';
+    // Reset EC radio ke default Low EC
+    setEcRadio('low');
     setTimeout(function(){
       if(!state.operator) $('inp-operator').focus();
       else                $('inp-supplier').focus();
     }, 50);
   }
 
+  function setEcRadio(value){
+    var radios = qsa('.ec-radio');
+    for(var i=0; i<radios.length; i++){
+      var r = radios[i];
+      var isMatch = r.getAttribute('data-ec') === value;
+      r.classList.toggle('selected', isMatch);
+      var input = r.querySelector('input');
+      if(input) input.checked = isMatch;
+    }
+  }
+
+  function getEcRadio(){
+    var checked = section.querySelector('.ec-radio input[name="ec-type"]:checked');
+    return checked ? checked.value : 'low';
+  }
+
   async function startBatch(){
     var op  = $('inp-operator').value.trim();
     var sup = $('inp-supplier').value.trim();
+    var ec  = getEcRadio();
     if(!op){  toast('Isi nama operator dulu', 'err'); $('inp-operator').focus(); return; }
     if(!sup){ toast('Isi nama supplier dulu', 'err'); $('inp-supplier').focus(); return; }
+    if(ec !== 'high' && ec !== 'low'){ toast('Pilih jenis cocopeat (High/Low EC)', 'err'); return; }
 
     state.operator = op;
     try { localStorage.setItem('vsk-rawmat-operator', op); } catch(e){}
@@ -1223,11 +1411,12 @@ tbody tr:hover td{background:var(--cream);}
         operator: op,
         supplier: sup,
         suratJalan: $('inp-suratjalan').value.trim(),
+        ecType: ec,
         notes: $('inp-notes-rawmat').value.trim()
       });
       setTimeout(async function(){
         await loadActiveBatch();
-        toast('Batch dimulai ✓', 'ok');
+        toast('Batch ' + ec.toUpperCase() + ' EC dimulai ✓', 'ok');
       }, 800);
     } catch(err){
       toast('Gagal memulai batch', 'err');
@@ -1246,6 +1435,14 @@ tbody tr:hover td{background:var(--cream);}
     $('bc-id').textContent       = b.batchId;
     $('bc-supplier').textContent = b.supplier || '(supplier kosong)';
     $('bc-meta').textContent     = (b.operator ? b.operator : '—') + (b.suratJalan ? ' · SJ ' + b.suratJalan : '');
+
+    // EC pill
+    var ec = (b.ecType || 'low').toLowerCase();
+    var ecPill = $('bc-ec');
+    if(ecPill){
+      ecPill.className = 'ec-pill ' + (ec === 'high' ? 'high' : 'low');
+      ecPill.textContent = (ec === 'high' ? 'High EC' : 'Low EC');
+    }
 
     renderTotals();
     renderKarungList();
@@ -1448,36 +1645,53 @@ tbody tr:hover td{background:var(--cream);}
     $('event-list').innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat data...</div></div>';
     $('st-saldo').innerHTML = '—<sup>kg</sup>';
     $('st-sub').textContent = 'Memuat data...';
-    $('st-in').textContent  = '—';
-    $('st-out').textContent = '—';
+    ['st-saldo-high','st-saldo-low'].forEach(function(id){ $(id).innerHTML = '—<sup>kg</sup>'; });
+    ['st-in-high','st-in-low','st-out-high','st-out-low'].forEach(function(id){ $(id).textContent = '—'; });
+    $('st-in-high-krg').textContent = '0';
+    $('st-in-low-krg').textContent  = '0';
 
     try {
       var res = await apiGet('rawmat-stock');
       if(!res.ok) throw new Error('bad response');
 
+      // Total saldo (hero)
       var saldo = res.saldoKg;
       $('st-saldo').className = 'hero-val' + (saldo < 0 ? ' neg' : '');
       $('st-saldo').innerHTML = fmtKg(saldo) + '<sup>kg</sup>';
+      $('st-sub').textContent = res.totalInKarung + ' karung masuk · ' + res.totalOutKarung + ' karung terpakai';
 
-      var subParts = [];
-      subParts.push(res.totalInKarung  + ' karung masuk');
-      subParts.push(res.totalOutKarung + ' karung terpakai');
-      $('st-sub').textContent = subParts.join(' · ');
+      // High EC card
+      var saldoH = res.saldoHighKg;
+      var hHero = $('st-saldo-high');
+      hHero.className = 'ec-card-saldo' + (saldoH < 0 ? ' neg' : '');
+      hHero.innerHTML = fmtKg(saldoH) + '<sup>kg</sup>';
+      $('st-in-high').textContent     = fmtKg(res.inHighKg);
+      $('st-out-high').textContent    = fmtKg(res.outHighKg);
+      $('st-in-high-krg').textContent = res.inHighKarung;
 
-      $('st-in').textContent  = fmtKg(res.totalInKg);
-      $('st-out').textContent = fmtKg(res.totalOutKg);
+      // Low EC card
+      var saldoL = res.saldoLowKg;
+      var lHero = $('st-saldo-low');
+      lHero.className = 'ec-card-saldo' + (saldoL < 0 ? ' neg' : '');
+      lHero.innerHTML = fmtKg(saldoL) + '<sup>kg</sup>';
+      $('st-in-low').textContent     = fmtKg(res.inLowKg);
+      $('st-out-low').textContent    = fmtKg(res.outLowKg);
+      $('st-in-low-krg').textContent = res.inLowKarung;
 
+      // Events list
       var wrap = $('event-list');
       if(!res.events || !res.events.length){
         wrap.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-h">Belum ada mutasi</div></div>';
         return;
       }
       wrap.innerHTML = res.events.map(function(e){
+        var ec = (e.ec || '').toLowerCase();
+        var ecBadge = ec ? ' <span class="ec-pill ' + ec + '" style="margin-left:6px">' + ec + '</span>' : '';
         return '<div class="event-row">' +
           '<div class="ev-left">' +
             '<div class="ev-arrow ' + e.type + '">' + (e.type === 'in' ? '↓' : '↑') + '</div>' +
             '<div class="ev-text">' +
-              '<div class="ev-label">' + e.label + '</div>' +
+              '<div class="ev-label">' + e.label + ecBadge + '</div>' +
               '<div class="ev-sub">'   + e.sub   + '</div>' +
             '</div>' +
           '</div>' +
@@ -1496,20 +1710,23 @@ tbody tr:hover td{background:var(--cream);}
   // ── Riwayat page ──
   async function loadRiwayat(){
     var tb = $('riwayat-body');
-    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Memuat riwayat...</td></tr>';
 
     try {
       var res = await apiGet('rawmat-batches');
       if(!res.ok) throw new Error('bad');
       var batches = res.batches || [];
       if(!batches.length){
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--stone)">Belum ada riwayat kedatangan.</td></tr>';
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--stone)">Belum ada riwayat kedatangan.</td></tr>';
         return;
       }
       tb.innerHTML = batches.map(function(b){
+        var ec = (b.ecType || 'low').toLowerCase();
+        var ecCell = '<span class="ec-pill ' + ec + '">' + ec + '</span>';
         return '<tr data-batch-id="' + b.batchId + '">' +
           '<td>' + b.tanggal + '</td>' +
           '<td>' + (b.supplier || '—') + '</td>' +
+          '<td>' + ecCell + '</td>' +
           '<td>' + b.totalKarung + '</td>' +
           '<td class="c-leaf">' + fmtKg(b.totalBerat) + '</td>' +
           '<td><span class="tbl-status ' + b.status + '">' + b.status + '</span></td>' +
@@ -1523,7 +1740,7 @@ tbody tr:hover td{background:var(--cream);}
         });
       }
     } catch(err){
-      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--rose)">Gagal memuat. Periksa koneksi.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">Gagal memuat. Periksa koneksi.</td></tr>';
     }
   }
 
@@ -1601,6 +1818,15 @@ tbody tr:hover td{background:var(--cream);}
 
     // Start batch form
     $('btn-start').addEventListener('click', startBatch);
+
+    // EC radio (toggle visual selected state)
+    var ecRadios = qsa('.ec-radio');
+    for(var ri=0; ri<ecRadios.length; ri++){
+      ecRadios[ri].addEventListener('click', function(){
+        var v = this.getAttribute('data-ec');
+        setEcRadio(v);
+      });
+    }
 
     // Weigh-in
     $('inp-berat').addEventListener('input', onBeratInput);
