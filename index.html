@@ -395,7 +395,9 @@ tbody tr:hover td{background:var(--cream);}
   .side-nav{flex-direction:row;flex:1;padding-top:0;gap:4px;}
   .side-section-title{display:none;}
   .side-item{padding:8px 12px;font-size:12px;}
-  .side-item-icon{display:none;}
+  /* Mobile: icon hanya tampil pada modul yang sedang aktif */
+  .side-item .side-item-icon{display:none;}
+  .side-item.active .side-item-icon{display:inline;}
   .side-item-meta{display:none;}
   .side-foot{padding:0;border:none;flex-direction:row;align-items:center;gap:8px;}
   .side-foot-date{display:none;}
@@ -423,7 +425,7 @@ tbody tr:hover td{background:var(--cream);}
   <nav class="side-nav">
     <div class="side-section-title">Modul</div>
     <button class="side-item active" data-go="produksi" type="button">
-      <span class="side-item-icon">⚙</span>
+      <span class="side-item-icon">🏭</span>
       <span>Produksi</span>
     </button>
     <button class="side-item" data-go="rawmat" type="button">
@@ -639,7 +641,7 @@ tbody tr:hover td{background:var(--cream);}
       </div>
       <div class="field" style="margin-top:10px">
         <label class="f-label">No. surat jalan <span style="color:var(--stone);font-weight:400">(opsional)</span></label>
-        <div class="f-wrap"><input type="text" id="inp-suratjalan" class="no-unit" placeholder="SJ-..."></div>
+        <div class="f-wrap"><input type="text" id="inp-suratjalan" class="no-unit" placeholder="DO-... (isi nomor surat jalan dari pengirim)"></div>
       </div>
 
       <div class="sec"><span class="sec-title">Jenis cocopeat</span><span class="sec-line"></span></div>
@@ -1202,12 +1204,28 @@ tbody tr:hover td{background:var(--cream);}
       '   💧 Basah   : ' + c.tB + ' kg\n' +
       '   ☀️ Kering  : ' + c.tKg + ' kg\n' +
       '   📉 Susut   : ' + c.susut + '\n\n' +
-      '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n_VSK Sistem v8_';
+      '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n' +
+      '_*Confidential VSK Production System Report. It is prohibited to disseminate this information unless written approval is obtained from VSK management.*_\n' +
+      '_*©All Right Reserved PT Varian Sumber Karya®*_';
+
+    var WA_GROUP_URL = 'https://chat.whatsapp.com/ER26EvBCJ1p1aA5ML21R3q?mode=gi_t';
+
+    function openWaGroup(){
+      // Buka grup di tab baru — user tinggal paste & send
+      window.open(WA_GROUP_URL, '_blank');
+    }
 
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(msg).then(function(){ toast('Laporan disalin ✓', 'ok'); }).catch(function(){ alert(msg); });
+      navigator.clipboard.writeText(msg).then(function(){
+        toast('Laporan disalin ✓ — buka WA, paste & send', 'ok');
+        openWaGroup();
+      }).catch(function(){
+        alert(msg);
+        openWaGroup();
+      });
     } else {
       alert(msg);
+      openWaGroup();
     }
   }
 

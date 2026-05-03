@@ -122,6 +122,54 @@ function doPost(e) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// DIAGNOSTIC — jalankan untuk lihat status schema saat ini
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Throw error berisi snapshot schema kedua sheet — output PASTI kelihatan
+ * di execution log panel sebagai "Error: VSK SCHEMA: ..." karena Apps Script
+ * selalu tampil error message dengan jelas.
+ *
+ * Cara pakai: pilih `cekStatus` di function dropdown → klik Run →
+ * output akan muncul sebagai error (bukan masalah, ini cuma trick supaya pesannya kelihatan).
+ */
+function cekStatus() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let report = '\n=== VSK SCHEMA STATUS ===\n';
+
+  const prod = ss.getSheetByName(SHEET_PRODUKSI);
+  if (prod) {
+    const h = prod.getRange(1, 1, 1, prod.getLastColumn()).getValues()[0].map(String);
+    report += '\n[Produksi headers]\n  ' + h.join(' | ') + '\n';
+    report += '\n  Karung High EC : ' + (h.indexOf('Karung High EC')      !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Karung Low EC  : ' + (h.indexOf('Karung Low EC')       !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Basah High EC  : ' + (h.indexOf('Basah High EC (kg)')  !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Basah Low EC   : ' + (h.indexOf('Basah Low EC (kg)')   !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Kering High EC : ' + (h.indexOf('Kering High EC (kg)') !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Kering Low EC  : ' + (h.indexOf('Kering Low EC (kg)')  !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Block High EC  : ' + (h.indexOf('Block High EC')       !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Block Low EC   : ' + (h.indexOf('Block Low EC')        !== -1 ? 'ADA ✓' : 'BELUM ✗');
+  } else {
+    report += '\n[Produksi] sheet tidak ditemukan';
+  }
+
+  const raw = ss.getSheetByName(SHEET_RAW_KEDATANGAN);
+  if (raw) {
+    const h = raw.getRange(1, 1, 1, raw.getLastColumn()).getValues()[0].map(String);
+    report += '\n\n[Rawmat_Kedatangan headers]\n  ' + h.join(' | ') + '\n';
+    report += '\n  EC Type        : ' + (h.indexOf('EC Type') !== -1 ? 'ADA ✓' : 'BELUM ✗');
+  } else {
+    report += '\n\n[Rawmat_Kedatangan] sheet tidak ditemukan';
+  }
+
+  report += '\n\nScript version: v8';
+  report += '\n=== END STATUS ===\n';
+
+  // Throw supaya pesannya pasti tampil di execution log
+  throw new Error(report);
+}
+
+// ═══════════════════════════════════════════════════════════
 // MIGRATION v7/v6 → v8
 // ═══════════════════════════════════════════════════════════
 
@@ -129,6 +177,9 @@ function doPost(e) {
  * Top-level migration: jalankan ini sekali per spreadsheet via Apps Script editor.
  * Akan migrate Produksi + Rawmat_Kedatangan ke schema v8.
  * Idempotent — aman dijalankan berulang.
+ *
+ * Output akan ditampilkan via THROW (intentional) supaya pesannya pasti
+ * terlihat di execution log panel — bukan error sungguhan.
  */
 function migrateToV8() {
   const result = {
@@ -137,9 +188,10 @@ function migrateToV8() {
     produksi: migrateProduksiToV8(),
     rawmat: migrateRawmatToV8()
   };
-  Logger.log('=== VSK MIGRATION v8 ===');
-  Logger.log(JSON.stringify(result, null, 2));
-  return result;
+  console.log('=== VSK MIGRATION v8 ===');
+  console.log(JSON.stringify(result, null, 2));
+  // Throw with result supaya output PASTI tampil di execution panel
+  throw new Error('MIGRATION RESULT (bukan error sungguhan, ini cara supaya hasilnya kelihatan):\n\n' + JSON.stringify(result, null, 2));
 }
 
 function migrateProduksiToV8() {
