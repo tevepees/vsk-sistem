@@ -37,7 +37,8 @@ const HEADERS_PRODUKSI = [
   'Basah (kg)', 'Basah High EC (kg)', 'Basah Low EC (kg)',
   'Kering (kg)', 'Kering High EC (kg)', 'Kering Low EC (kg)',
   'Block (pcs)', 'Block High EC', 'Block Low EC',
-  'Susut (%)', 'Catatan', 'Input Time'
+  'Susut (%)', 'Catatan', 'Input Time',
+  'Outcome', 'Carry-In High EC (kg)', 'Carry-In Low EC (kg)'
 ];
 
 // Indeks kolom 0-based untuk kemudahan referensi
@@ -47,7 +48,8 @@ const PROD_COL = {
   BASAH: 7, BASAH_H: 8, BASAH_L: 9,
   KERING: 10, KERING_H: 11, KERING_L: 12,
   BLOCK: 13, BLOCK_H: 14, BLOCK_L: 15,
-  SUSUT: 16, NOTES: 17, TIME: 18
+  SUSUT: 16, NOTES: 17, TIME: 18,
+  OUTCOME: 19, CARRYIN_H: 20, CARRYIN_L: 21
 };
 
 const HEADERS_RAW_KEDATANGAN = [
@@ -149,6 +151,8 @@ function cekStatus() {
     report += '\n  Kering Low EC  : ' + (h.indexOf('Kering Low EC (kg)')  !== -1 ? 'ADA ✓' : 'BELUM ✗');
     report += '\n  Block High EC  : ' + (h.indexOf('Block High EC')       !== -1 ? 'ADA ✓' : 'BELUM ✗');
     report += '\n  Block Low EC   : ' + (h.indexOf('Block Low EC')        !== -1 ? 'ADA ✓' : 'BELUM ✗');
+    report += '\n  Outcome        : ' + (h.indexOf('Outcome')             !== -1 ? 'ADA ✓' : 'BELUM ✗ — jalankan migrateCarryOver()');
+    report += '\n  Carry-In High  : ' + (h.indexOf('Carry-In High EC (kg)') !== -1 ? 'ADA ✓' : 'BELUM ✗');
   } else {
     report += '\n[Produksi] sheet tidak ditemukan';
   }
@@ -306,6 +310,45 @@ function migrateRawmatToV8() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MIGRATION — Carry-Over (NC-G)
+// Jalankan 1x di Apps Script editor setelah deploy kode ini.
+// Idempotent — aman dijalankan ulang.
+// ═══════════════════════════════════════════════════════════
+
+function migrateCarryOver() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PRODUKSI);
+  if (!sheet) throw new Error('Sheet "Produksi" tidak ditemukan');
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+
+  if (headers.indexOf('Outcome') !== -1) {
+    throw new Error('SKIP — Kolom Outcome sudah ada, tidak perlu migrasi ulang.');
+  }
+
+  sheet.getRange(1, lastCol + 1).setValue('Outcome');
+  sheet.getRange(1, lastCol + 2).setValue('Carry-In High EC (kg)');
+  sheet.getRange(1, lastCol + 3).setValue('Carry-In Low EC (kg)');
+  sheet.getRange(1, lastCol + 1, 1, 3)
+    .setFontWeight('bold').setBackground('#048419').setFontColor('#ffffff');
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const dataCount = lastRow - 1;
+    const fill = [];
+    for (let i = 0; i < dataCount; i++) fill.push(['berhasil', 0, 0]);
+    sheet.getRange(2, lastCol + 1, dataCount, 3).setValues(fill);
+  }
+
+  throw new Error(
+    'MIGRASI SELESAI (bukan error sungguhan):\n' +
+    '  Kolom Outcome, Carry-In High EC, Carry-In Low EC ditambahkan.\n' +
+    '  Rows backfill: ' + (lastRow - 1) + ' (semua outcome="berhasil", carryIn=0)\n' +
+    '  Schema sekarang: 22 kolom.'
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 // MODULE: PRODUKSI v8
 // ═══════════════════════════════════════════════════════════
 
@@ -334,18 +377,27 @@ function produksiSaveShift(data) {
     : '';
   const tanggal = todayDate();
 
+  const validOutcomes = ['berhasil', 'parsial', 'gagal'];
+  const outcome = validOutcomes.indexOf(String(data.outcome || '').toLowerCase()) !== -1
+    ? String(data.outcome).toLowerCase() : 'berhasil';
+  const carryInH = parseNum(data.carryInHigh);
+  const carryInL = parseNum(data.carryInLow);
+
   sheet.appendRow([
     new Date(), tanggal, data.shift, data.operator,
     krg.total, krg.high, krg.low,
     bas.total, bas.high, bas.low,
     ker.total, ker.high, ker.low,
     blk.total, blk.high, blk.low,
-    susut, data.notes || '', data.time
+    susut, data.notes || '', data.time,
+    outcome, carryInH, carryInL
   ]);
 
   return {
     ok: true,
     savedDate: tanggal,
+    outcome: outcome,
+    carryInHigh: carryInH, carryInLow: carryInL,
     karungTotal: krg.total, karungHigh: krg.high, karungLow: krg.low,
     basahTotal:  bas.total, basahHigh:  bas.high, basahLow:  bas.low,
     keringTotal: ker.total, keringHigh: ker.high, keringLow: ker.low,
@@ -376,7 +428,10 @@ function getRekapByDate(date) {
       blockLow:  parseNum(row[PROD_COL.BLOCK_L]),
       susut: row[PROD_COL.SUSUT] ? String(row[PROD_COL.SUSUT]) : '',
       notes: row[PROD_COL.NOTES] || '',
-      time:  row[PROD_COL.TIME]  || ''
+      time:  row[PROD_COL.TIME]  || '',
+      outcome:     row[PROD_COL.OUTCOME]   || 'berhasil',
+      carryInHigh: parseNum(row[PROD_COL.CARRYIN_H]),
+      carryInLow:  parseNum(row[PROD_COL.CARRYIN_L])
     });
   }
   return { ok: true, date: date, entries: entries };
@@ -397,6 +452,8 @@ function getRiwayat() {
         basah: 0,  basahHigh: 0,  basahLow: 0,
         kering: 0, keringHigh: 0, keringLow: 0,
         block: 0,  blockHigh: 0,  blockLow: 0,
+        carryInHigh: 0, carryInLow: 0,
+        outcomes: [],
         shifts: []
       };
     }
@@ -413,7 +470,11 @@ function getRiwayat() {
     b.block      += parseNum(row[PROD_COL.BLOCK]);
     b.blockHigh  += parseNum(row[PROD_COL.BLOCK_H]);
     b.blockLow   += parseNum(row[PROD_COL.BLOCK_L]);
-    if (!b.shifts.includes(row[PROD_COL.SHIFT])) b.shifts.push(row[PROD_COL.SHIFT]);
+    b.carryInHigh += parseNum(row[PROD_COL.CARRYIN_H]);
+    b.carryInLow  += parseNum(row[PROD_COL.CARRYIN_L]);
+    const rowOutcome = row[PROD_COL.OUTCOME] || 'berhasil';
+    if (b.outcomes.indexOf(rowOutcome) === -1) b.outcomes.push(rowOutcome);
+    if (b.shifts.indexOf(row[PROD_COL.SHIFT]) === -1) b.shifts.push(row[PROD_COL.SHIFT]);
   }
   return {
     ok: true,
@@ -438,7 +499,9 @@ function getDebugInfo() {
       karung: { total: row[PROD_COL.KARUNG], high: row[PROD_COL.KARUNG_H], low: row[PROD_COL.KARUNG_L] },
       basah:  { total: row[PROD_COL.BASAH],  high: row[PROD_COL.BASAH_H],  low: row[PROD_COL.BASAH_L] },
       kering: { total: row[PROD_COL.KERING], high: row[PROD_COL.KERING_H], low: row[PROD_COL.KERING_L] },
-      block:  { total: row[PROD_COL.BLOCK],  high: row[PROD_COL.BLOCK_H],  low: row[PROD_COL.BLOCK_L] }
+      block:  { total: row[PROD_COL.BLOCK],  high: row[PROD_COL.BLOCK_H],  low: row[PROD_COL.BLOCK_L] },
+      outcome:    row[PROD_COL.OUTCOME]   || 'berhasil',
+      carryIn:    { high: row[PROD_COL.CARRYIN_H], low: row[PROD_COL.CARRYIN_L] }
     });
   }
   return {
@@ -614,8 +677,10 @@ function getRawmatStock() {
   let outHighKg = 0, outLowKg = 0, outHighKarung = 0, outLowKarung = 0;
   let lastOut = null;
   for (let i = 1; i < prod.length; i++) {
-    outHighKg     += parseNum(prod[i][PROD_COL.BASAH_H]);
-    outLowKg      += parseNum(prod[i][PROD_COL.BASAH_L]);
+    const carryH = parseNum(prod[i][PROD_COL.CARRYIN_H]);
+    const carryL = parseNum(prod[i][PROD_COL.CARRYIN_L]);
+    outHighKg     += Math.max(0, parseNum(prod[i][PROD_COL.BASAH_H]) - carryH);
+    outLowKg      += Math.max(0, parseNum(prod[i][PROD_COL.BASAH_L]) - carryL);
     outHighKarung += parseNum(prod[i][PROD_COL.KARUNG_H]);
     outLowKarung  += parseNum(prod[i][PROD_COL.KARUNG_L]);
     if (prod[i][PROD_COL.TS] && (!lastOut || prod[i][PROD_COL.TS] > lastOut)) {
