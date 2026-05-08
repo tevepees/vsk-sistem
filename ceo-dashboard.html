@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VSK — Dashboard Manajemen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --cream: #fbfaf6; --cream2: #f0efe8; --stone: #bcbeb3; --sand: #8a9089;
+  --brown: #5a6960; --char: #03473C;
+  --leaf: #048419; --leaf2: #6FBC33; --leaf-bg: #e9f4ec;
+  --amber: #b88716; --amber2: #FFD333; --amber-bg: #fff8db;
+  --blue: #3456a3; --blue-bg: #e8f0fe;
+  --rose: #a05050; --rose-bg: #fdf0f0;
+  --border: #dee0d7; --border2: #c4c9bd;
+  --sans: 'Open Sans', -apple-system, system-ui, sans-serif;
+  --serif: 'Exo 2', 'Open Sans', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --r: 12px;
+  --shadow: 0 1px 4px rgba(3,71,60,.06), 0 0 0 1px var(--border);
+  --hdr-h: 60px;
+  --filter-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream2); color: var(--char); min-height: 100vh; line-height: 1.5; }
+
+/* ── HEADER ── */
+.header {
+  height: var(--hdr-h); background: var(--cream);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center;
+}
+.header-inner {
+  max-width: 1360px; width: 100%; margin: 0 auto;
+  padding: 0 24px; display: flex; align-items: center; gap: 12px;
+}
+.header-logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; display: block; }
+.header-info { flex: 1; }
+.header-title { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--char); line-height: 1.2; }
+.header-sub { font-family: var(--serif); font-size: 10px; color: var(--sand); font-style: italic; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-date { font-family: var(--mono); font-size: 11px; color: var(--brown); white-space: nowrap; }
+.env-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: .04em; }
+.env-badge.staging { background: var(--amber-bg); color: var(--amber); border: 1px solid #ffe066; }
+.env-badge.prod { background: var(--leaf-bg); color: var(--leaf); border: 1px solid #b8e0bf; }
+.btn-refresh {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--leaf); color: #fff; border: none;
+  border-radius: 8px; padding: 7px 13px;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s; white-space: nowrap;
+}
+.btn-refresh:hover { background: #027514; }
+.btn-refresh:disabled { opacity: .55; cursor: not-allowed; }
+.btn-refresh svg { width: 12px; height: 12px; }
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  height: var(--filter-h); background: var(--cream);
+  border-bottom: 2px solid var(--border2);
+  position: sticky; top: var(--hdr-h); z-index: 20;
+  display: flex; align-items: center;
+}
+.filter-inner {
+  max-width: 1360px; width: 100%; margin: 0 auto;
+  padding: 0 24px; display: flex; align-items: center; gap: 16px;
+}
+.filter-label { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--stone); text-transform: uppercase; letter-spacing: .08em; flex-shrink: 0; }
+.filter-tabs { display: flex; gap: 4px; }
+.ftab {
+  padding: 6px 14px; border-radius: 8px;
+  font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--brown);
+  background: transparent; border: 1px solid transparent; cursor: pointer; transition: all .15s;
+}
+.ftab:hover { background: var(--cream2); color: var(--char); }
+.ftab.active { background: var(--leaf); color: #fff; border-color: var(--leaf); font-weight: 600; }
+.filter-range { font-family: var(--mono); font-size: 11px; color: var(--sand); margin-left: 8px; }
+.filter-note { font-family: var(--mono); font-size: 10px; color: var(--amber); }
+.last-updated { font-family: var(--mono); font-size: 10px; color: var(--stone); margin-left: auto; white-space: nowrap; }
+
+/* ── CONTAINER ── */
+.container { max-width: 1360px; margin: 0 auto; padding: 24px 24px 56px; }
+
+/* ── SECTION ── */
+.section { margin-bottom: 28px; }
+.section-title {
+  font-family: var(--serif); font-size: 11px; font-weight: 700;
+  color: var(--brown); letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border2); }
+.section-subtitle { font-size: 12px; color: var(--sand); font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 6px; font-family: var(--sans); }
+
+/* ── KPI GRID ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 680px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 400px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: #fff; border-radius: var(--r); box-shadow: var(--shadow);
+  padding: 16px 18px; border-top: 3px solid transparent;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.kpi-card.c-leaf  { border-top-color: var(--leaf); }
+.kpi-card.c-leaf2 { border-top-color: var(--leaf2); }
+.kpi-card.c-amber { border-top-color: var(--amber2); }
+.kpi-card.c-stone { border-top-color: var(--stone); }
+.kpi-card.c-rose  { border-top-color: #e08080; }
+.kpi-card.c-blue  { border-top-color: var(--blue); }
+.kpi-label { font-size: 10px; font-weight: 700; color: var(--sand); text-transform: uppercase; letter-spacing: .07em; }
+.kpi-value { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--char); line-height: 1.2; margin: 4px 0 2px; }
+.kpi-value .unit { font-size: 12px; font-weight: 500; color: var(--brown); margin-left: 2px; }
+.kpi-sub { font-size: 11px; color: var(--brown); }
+.kpi-sub .hi { color: var(--leaf); font-weight: 600; }
+.kpi-sub .lo { color: var(--blue); font-weight: 600; }
+.kpi-sub .ok { color: var(--leaf); font-weight: 600; }
+.kpi-sub .warn { color: var(--amber); font-weight: 600; }
+.kpi-sub .bad { color: var(--rose); font-weight: 600; }
+.kpi-empty { font-family: var(--mono); font-size: 18px; color: var(--stone); margin: 4px 0 2px; }
+
+/* ── CHARTS ── */
+.charts-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; }
+@media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+.chart-card { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); padding: 18px 20px 14px; }
+.chart-title { font-family: var(--serif); font-size: 13px; font-weight: 600; color: var(--char); margin-bottom: 12px; }
+.chart-wrap { position: relative; height: 230px; }
+
+/* ── EVALUASI PENJEMURAN ── */
+.evaluasi-header { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.outcome-stat {
+  flex: 1; min-width: 120px;
+  background: #fff; border-radius: var(--r); box-shadow: var(--shadow);
+  padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.outcome-stat .os-count { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1.1; }
+.outcome-stat .os-label { font-size: 11px; color: var(--sand); font-weight: 500; }
+.outcome-stat .os-pct { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.outcome-stat.berhasil .os-count { color: var(--leaf); }
+.outcome-stat.berhasil .os-pct { color: var(--leaf); }
+.outcome-stat.parsial .os-count { color: var(--amber); }
+.outcome-stat.parsial .os-pct { color: var(--amber); }
+.outcome-stat.gagal .os-count { color: var(--rose); }
+.outcome-stat.gagal .os-pct { color: var(--rose); }
+
+.outcome-bar-wrap { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 14px; }
+.outcome-bar-label { font-size: 11px; font-weight: 600; color: var(--brown); margin-bottom: 8px; }
+.outcome-bar { display: flex; height: 12px; border-radius: 8px; overflow: hidden; gap: 1px; }
+.ob-seg { height: 100%; transition: width .4s; }
+.ob-seg.berhasil { background: var(--leaf); }
+.ob-seg.parsial { background: var(--amber2); }
+.ob-seg.gagal { background: #e08080; }
+.outcome-bar-legend { display: flex; gap: 14px; margin-top: 8px; }
+.obl-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--brown); }
+.obl-dot { width: 10px; height: 10px; border-radius: 50%; }
+.obl-dot.berhasil { background: var(--leaf); }
+.obl-dot.parsial { background: var(--amber2); }
+.obl-dot.gagal { background: #e08080; }
+
+.carry-days-title { font-size: 12px; font-weight: 600; color: var(--brown); margin-bottom: 10px; }
+.no-carry { font-size: 13px; color: var(--leaf); background: var(--leaf-bg); border-radius: var(--r); padding: 12px 18px; border: 1px solid #c0dfca; }
+
+/* ── REKAP ── */
+.rekap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.rekap-card { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); padding: 16px 18px; }
+.rekap-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.shift-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; letter-spacing: .04em;
+}
+.shift-badge.pagi { background: var(--amber-bg); color: var(--amber); border: 1px solid #ffe066; }
+.shift-badge.sore { background: var(--blue-bg); color: var(--blue); border: 1px solid #c5caf0; }
+.rekap-op { font-size: 13px; color: var(--brown); font-weight: 500; }
+.oc-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; margin-left: auto; letter-spacing: .04em;
+}
+.oc-badge.berhasil { background: var(--leaf-bg); color: var(--leaf); }
+.oc-badge.parsial { background: var(--amber-bg); color: var(--amber); }
+.oc-badge.gagal { background: var(--rose-bg); color: var(--rose); }
+.rekap-rows { display: flex; flex-direction: column; gap: 5px; }
+.rekap-row { display: grid; grid-template-columns: 76px 1fr 1fr 1fr; gap: 4px; align-items: baseline; }
+.rr-lbl { font-size: 11px; color: var(--sand); font-weight: 500; }
+.rr-tot { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--char); }
+.rr-h { font-family: var(--mono); font-size: 11px; color: var(--leaf); }
+.rr-l { font-family: var(--mono); font-size: 11px; color: var(--blue); }
+.rekap-susut { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border); font-size: 12px; color: var(--brown); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rekap-susut .pct { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--char); }
+.rekap-carry-note { font-size: 11px; color: var(--amber); background: var(--amber-bg); padding: 2px 8px; border-radius: 6px; }
+.empty-state { color: var(--stone); font-size: 14px; padding: 20px 18px; background: #fff; border-radius: var(--r); box-shadow: var(--shadow); }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; border-radius: var(--r); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; min-width: 620px; }
+thead th {
+  text-align: left; padding: 10px 12px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sand); background: var(--cream2); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+thead th.r { text-align: right; }
+tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #fafaf7; }
+tbody tr.row-highlight td { background: #fffbeb; }
+.td-r { font-family: var(--mono); font-size: 12px; text-align: right; }
+.td-mono { font-family: var(--mono); font-size: 12px; }
+.td-carry { font-family: var(--mono); font-size: 11px; color: var(--amber); text-align: right; }
+.badge {
+  display: inline-block; font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap;
+}
+.badge.ec-high { background: var(--leaf-bg); color: var(--leaf); }
+.badge.ec-low { background: var(--blue-bg); color: var(--blue); }
+.badge.ec-mixed { background: var(--amber-bg); color: var(--amber); }
+.badge.st-open { background: var(--leaf-bg); color: var(--leaf); }
+.badge.st-closed { background: var(--cream2); color: var(--brown); border: 1px solid var(--border2); }
+.badge.st-cancelled { background: var(--rose-bg); color: var(--rose); }
+.badge.oc-berhasil { background: var(--leaf-bg); color: var(--leaf); }
+.badge.oc-parsial { background: var(--amber-bg); color: var(--amber); }
+.badge.oc-gagal { background: var(--rose-bg); color: var(--rose); }
+.badge.shift-pagi { background: var(--amber-bg); color: var(--amber); }
+.badge.shift-sore { background: var(--blue-bg); color: var(--blue); }
+.badge-row { display: flex; gap: 3px; flex-wrap: wrap; }
+
+/* ── EVENTS ── */
+.events-list { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.ev-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.ev-item:last-child { border-bottom: none; }
+.ev-item:hover { background: #fafaf7; }
+.ev-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+.ev-icon.in { background: var(--leaf-bg); }
+.ev-icon.out { background: var(--rose-bg); }
+.ev-body { flex: 1; min-width: 0; }
+.ev-label { font-size: 13px; font-weight: 600; color: var(--char); }
+.ev-sub { font-size: 11px; color: var(--sand); margin-top: 1px; }
+.ev-right { text-align: right; flex-shrink: 0; }
+.ev-kg { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--char); }
+.ev-date { font-family: var(--mono); font-size: 10px; color: var(--stone); margin-top: 1px; }
+.ev-dir { font-family: var(--mono); font-size: 10px; font-weight: 700; margin-top: 2px; }
+.ev-dir.in { color: var(--leaf); }
+.ev-dir.out { color: var(--rose); }
+
+/* ── LOADING / ERROR ── */
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 14px; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border2); border-top-color: var(--leaf); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--stone); }
+.error-card { background: var(--rose-bg); border: 1px solid #e5c4c4; border-radius: var(--r); padding: 16px 20px; color: var(--rose); font-size: 14px; line-height: 1.6; }
+
+@media (max-width: 600px) {
+  .header-date, .filter-range, .filter-note { display: none; }
+  .container { padding: 16px 12px 48px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <div class="header-inner">
+    <img class="header-logo" src="logo.svg" alt="VSK Logo">
+    <div class="header-info">
+      <div class="header-title">Dashboard Manajemen</div>
+      <div class="header-sub">PT Varian Sumber Karya — Produksi &amp; Rawmat Overview</div>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="hdrDate"></span>
+      <span class="env-badge" id="envBadge"></span>
+      <button class="btn-refresh" id="btnRefresh" onclick="loadAll()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.5 2.5A7 7 0 1 0 14 8"/><polyline points="14,2 14,5.5 10.5,5.5"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FILTER BAR ── -->
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span class="filter-label">Periode</span>
+    <div class="filter-tabs">
+      <button class="ftab" data-p="today" onclick="setPeriod('today')">Hari Ini</button>
+      <button class="ftab active" data-p="week" onclick="setPeriod('week')">Minggu Ini</button>
+      <button class="ftab" data-p="month" onclick="setPeriod('month')">Bulan Ini</button>
+      <button class="ftab" data-p="ytd" onclick="setPeriod('ytd')">YTD</button>
+    </div>
+    <span class="filter-range" id="filterRange"></span>
+    <span class="filter-note" id="filterNote"></span>
+    <span class="last-updated" id="lastUpdated"></span>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="container">
+  <div id="appContent">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text">Memuat data dari server…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ── CONFIG ── */
+const IS_STAGING = /staging|localhost|127\.0\.0\.1/.test(location.hostname);
+const API = IS_STAGING
+  ? 'https://script.google.com/macros/s/AKfycbxdpYmv3AUqcS0P7Lv-3LRYBV4nDoscDSfcupsN0UwvQt01E0Z3-YLwuLglY9iILGkl/exec'
+  : 'https://script.google.com/macros/s/AKfycbw3pWXUCvStevJLIA2x1r7n39Hb2UrCNYuGzwUbzLVpMtyd_ICBMS8RLR3ZqLo9_PqRaw/exec';
+
+/* ── STATE ── */
+const G = { stock: null, riwayat: [], rekap: { entries: [] }, batches: [], period: 'week' };
+const charts = {};
+
+/* ── HELPERS ── */
+function num(v) { return parseFloat(v) || 0; }
+function fmt(v, dec) {
+  if (v == null || v === '') return '–';
+  return Number(v).toLocaleString('id-ID', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
+}
+function fmtDate(s) {
+  if (!s) return '–';
+  const p = s.split('-');
+  return p[2] + '/' + p[1];
+}
+function fmtDateLong(s) {
+  if (!s) return '–';
+  const M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const [y, m, d] = s.split('-');
+  return d + ' ' + (M[parseInt(m) - 1] || m) + ' ' + y;
+}
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function isoFromOffset(daysAgo) {
+  const d = new Date(); d.setDate(d.getDate() - daysAgo);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function computeSusut(basah, kering, carryH, carryL) {
+  const dijemur = num(basah) + num(carryH) + num(carryL);
+  if (dijemur <= 0) return null;
+  return (dijemur - num(kering)) / dijemur * 100;
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── FILTER ── */
+function filterRows(period) {
+  const today = todayISO();
+  if (period === 'today') return G.riwayat.filter(r => r.date === today);
+  if (period === 'week')  return G.riwayat.filter(r => r.date >= isoFromOffset(6));
+  if (period === 'month') return G.riwayat.filter(r => r.date.startsWith(today.slice(0,7)));
+  if (period === 'ytd')   return G.riwayat.filter(r => r.date.startsWith(today.slice(0,4)));
+  return G.riwayat;
+}
+
+function rangeLabel(period) {
+  const today = todayISO();
+  if (period === 'today') return fmtDateLong(today);
+  if (period === 'week') return fmtDateLong(isoFromOffset(6)) + ' – ' + fmtDateLong(today);
+  if (period === 'month') {
+    const M = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const [y, m] = today.split('-'); return M[parseInt(m)-1] + ' ' + y;
+  }
+  if (period === 'ytd') return 'Januari – sekarang ' + today.slice(0,4);
+  return '';
+}
+
+/* ── AGGREGATE ── */
+function getAggregate(period) {
+  // For "today", use rekap (current shift data, more accurate)
+  if (period === 'today') {
+    const entries = G.rekap.entries || [];
+    let ker=0,kerH=0,kerL=0, blk=0,blkH=0,blkL=0, krg=0, bas=0,basH=0,basL=0, cH=0,cL=0;
+    entries.forEach(e => {
+      ker+=num(e.kering); kerH+=num(e.keringHigh); kerL+=num(e.keringLow);
+      blk+=num(e.block);  blkH+=num(e.blockHigh);  blkL+=num(e.blockLow);
+      krg+=num(e.karung); bas+=num(e.basah); basH+=num(e.basahHigh); basL+=num(e.basahLow);
+      cH+=num(e.carryInHigh); cL+=num(e.carryInLow);
+    });
+    const ocs = entries.map(e => e.outcome || 'berhasil');
+    const berhasil = ocs.filter(o=>o==='berhasil').length;
+    const parsial  = ocs.filter(o=>o==='parsial').length;
+    const gagal    = ocs.filter(o=>o==='gagal').length;
+    const dijemur  = bas + cH + cL;
+    const susut    = dijemur > 0 ? (dijemur - ker) / dijemur * 100 : null;
+    const nDays    = entries.length > 0 ? 1 : 0;
+    const eff      = nDays > 0 && gagal===0 && parsial===0 ? 100 : nDays > 0 ? berhasil/ocs.length*100 : null;
+    return { ker,kerH,kerL, blk,blkH,blkL, krg, bas,basH,basL, cH,cL, carryTotal:cH+cL,
+             susut, nDays, berhasil, parsial, gagal, eff, hasData: entries.length > 0 };
+  }
+
+  const rows = filterRows(period);
+  let ker=0,kerH=0,kerL=0, blk=0,blkH=0,blkL=0, krg=0, bas=0,basH=0,basL=0, cH=0,cL=0;
+  let sSum=0,sCnt=0, berhasil=0, parsial=0, gagal=0;
+  rows.forEach(r => {
+    ker+=num(r.kering); kerH+=num(r.keringHigh); kerL+=num(r.keringLow);
+    blk+=num(r.block);  blkH+=num(r.blockHigh);  blkL+=num(r.blockLow);
+    krg+=num(r.karung); bas+=num(r.basah); basH+=num(r.basahHigh); basL+=num(r.basahLow);
+    cH+=num(r.carryInHigh); cL+=num(r.carryInLow);
+    const s = computeSusut(r.basah, r.kering, r.carryInHigh, r.carryInLow);
+    if (s !== null) { sSum+=s; sCnt++; }
+    const ocs = r.outcomes || [];
+    if (ocs.includes('gagal')) gagal++;
+    else if (ocs.includes('parsial')) parsial++;
+    else berhasil++;
+  });
+  const nDays = rows.length;
+  return { ker,kerH,kerL, blk,blkH,blkL, krg, bas,basH,basL, cH,cL, carryTotal:cH+cL,
+           susut: sCnt > 0 ? sSum/sCnt : null, nDays, berhasil, parsial, gagal,
+           eff: nDays > 0 ? berhasil/nDays*100 : null, hasData: nDays > 0 };
+}
+
+/* ── API ── */
+async function apiFetch(action) {
+  const r = await fetch(API + '?action=' + action);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+/* ── LOAD ALL ── */
+async function loadAll() {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  document.getElementById('envBadge').textContent = IS_STAGING ? 'STAGING' : 'PRODUCTION';
+  document.getElementById('envBadge').className = 'env-badge ' + (IS_STAGING ? 'staging' : 'prod');
+  document.getElementById('hdrDate').textContent = new Date().toLocaleDateString('id-ID', {
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+  try {
+    const [stock, riwayat, rekap, batches] = await Promise.all([
+      apiFetch('rawmat-stock'), apiFetch('riwayat'), apiFetch('rekap'), apiFetch('rawmat-batches')
+    ]);
+    G.stock = stock; G.riwayat = riwayat.rows || []; G.rekap = rekap; G.batches = batches.batches || [];
+    document.getElementById('lastUpdated').textContent =
+      'Update: ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    renderAll();
+  } catch (err) {
+    document.getElementById('appContent').innerHTML =
+      '<div class="error-card">❌ <strong>Gagal memuat data.</strong><br>' + esc(err.message) +
+      '<br><br>Pastikan koneksi internet aktif, lalu klik Refresh.</div>';
+  } finally { btn.disabled = false; }
+}
+
+/* ── SET PERIOD ── */
+function setPeriod(p) {
+  G.period = p;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  document.getElementById('filterRange').textContent = rangeLabel(p);
+  document.getElementById('filterNote').textContent = p === 'ytd' ? '(maks. 30 hari)' : '';
+  if (G.stock) renderAll();
+}
+
+/* ── RENDER ALL ── */
+function renderAll() {
+  document.getElementById('filterRange').textContent = rangeLabel(G.period);
+  document.getElementById('filterNote').textContent = G.period === 'ytd' ? '(maks. 30 hari)' : '';
+  const agg = getAggregate(G.period);
+  const filtered = filterRows(G.period);
+
+  const html = `
+    ${renderKPI(agg)}
+    ${renderEvaluasi(filtered, agg)}
+    ${renderCharts()}
+    ${renderRekapSection()}
+    ${renderRiwayatSection(filtered)}
+    ${renderBatchSection()}
+    ${renderEventsSection()}
+  `;
+  document.getElementById('appContent').innerHTML = html;
+  requestAnimationFrame(() => {
+    renderTrendChart(filtered);
+    renderStockChart(G.stock);
+  });
+}
+
+/* ── KPI ── */
+function renderKPI(a) {
+  const s = G.stock;
+  const effColor = a.eff === null ? 'var(--stone)'
+    : a.eff >= 80 ? 'var(--leaf)' : a.eff >= 50 ? 'var(--amber)' : 'var(--rose)';
+  return `
+  <div class="section">
+    <div class="section-title">
+      Ringkasan
+      <span class="section-subtitle">${a.nDays} hari produksi dalam periode ini</span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card c-leaf2">
+        <div class="kpi-label">Produksi Kering</div>
+        ${a.hasData
+          ? `<div class="kpi-value">${fmt(a.ker)}<span class="unit">kg</span></div>
+             <div class="kpi-sub"><span class="hi">H: ${fmt(a.kerH)} kg</span> · <span class="lo">L: ${fmt(a.kerL)} kg</span></div>`
+          : `<div class="kpi-empty">–</div><div class="kpi-sub">Belum ada data</div>`}
+      </div>
+      <div class="kpi-card c-amber">
+        <div class="kpi-label">Produksi Block</div>
+        ${a.hasData
+          ? `<div class="kpi-value">${fmt(a.blk)}<span class="unit">pcs</span></div>
+             <div class="kpi-sub"><span class="hi">H: ${fmt(a.blkH)}</span> · <span class="lo">L: ${fmt(a.blkL)}</span></div>`
+          : `<div class="kpi-empty">–</div><div class="kpi-sub">Belum ada data</div>`}
+      </div>
+      <div class="kpi-card c-stone">
+        <div class="kpi-label">Susut Rata-rata</div>
+        ${a.susut !== null
+          ? `<div class="kpi-value">${fmt(a.susut,1)}<span class="unit">%</span></div>
+             <div class="kpi-sub">Dari ${a.nDays} hari penjemuran</div>`
+          : `<div class="kpi-empty">–</div><div class="kpi-sub">Belum ada data</div>`}
+      </div>
+      <div class="kpi-card c-leaf">
+        <div class="kpi-label">Saldo Rawmat Basah</div>
+        ${s ? `<div class="kpi-value">${fmt(s.saldoKg)}<span class="unit">kg</span></div>
+               <div class="kpi-sub"><span class="hi">H: ${fmt(s.saldoHighKg)} kg</span> · <span class="lo">L: ${fmt(s.saldoLowKg)} kg</span></div>`
+            : `<div class="kpi-empty">–</div>`}
+      </div>
+      <div class="kpi-card c-rose">
+        <div class="kpi-label">Total Carry-In Diterima</div>
+        ${a.hasData && a.carryTotal > 0
+          ? `<div class="kpi-value">${fmt(a.carryTotal)}<span class="unit">kg</span></div>
+             <div class="kpi-sub"><span class="hi">H: ${fmt(a.cH)} kg</span> · <span class="lo">L: ${fmt(a.cL)} kg</span></div>`
+          : a.hasData
+          ? `<div class="kpi-value" style="color:var(--leaf)">0<span class="unit">kg</span></div>
+             <div class="kpi-sub"><span class="ok">Tidak ada carry-over</span></div>`
+          : `<div class="kpi-empty">–</div><div class="kpi-sub">Belum ada data</div>`}
+      </div>
+      <div class="kpi-card c-blue">
+        <div class="kpi-label">Efektivitas Penjemuran</div>
+        ${a.eff !== null
+          ? `<div class="kpi-value" style="color:${effColor}">${fmt(a.eff,0)}<span class="unit">%</span></div>
+             <div class="kpi-sub">
+               <span class="ok">${a.berhasil}✓</span>
+               ${a.parsial > 0 ? ` <span class="warn">${a.parsial}⚠</span>` : ''}
+               ${a.gagal > 0   ? ` <span class="bad">${a.gagal}✗</span>` : ''}
+               &nbsp;dari ${a.nDays} hari
+             </div>`
+          : `<div class="kpi-empty">–</div><div class="kpi-sub">Belum ada data</div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── EVALUASI PENJEMURAN ── */
+function renderEvaluasi(rows, agg) {
+  const total = agg.nDays;
+  if (!agg.hasData) return `
+  <div class="section">
+    <div class="section-title">Evaluasi Penjemuran</div>
+    <div class="empty-state">Belum ada data untuk periode ini.</div>
+  </div>`;
+
+  const pct = (n) => total > 0 ? (n / total * 100).toFixed(0) : 0;
+  const bPct = total > 0 ? num((agg.berhasil / total * 100).toFixed(1)) : 0;
+  const pPct = total > 0 ? num((agg.parsial  / total * 100).toFixed(1)) : 0;
+  const gPct = total > 0 ? num((agg.gagal    / total * 100).toFixed(1)) : 0;
+
+  // Days that had carry-over or non-berhasil outcome
+  const problematicRows = rows.filter(r => {
+    const hasCarry = num(r.carryInHigh) + num(r.carryInLow) > 0;
+    const ocs = r.outcomes || [];
+    return hasCarry || ocs.includes('parsial') || ocs.includes('gagal');
+  }).sort((a, b) => b.date.localeCompare(a.date));
+
+  const carryTableHtml = problematicRows.length === 0
+    ? `<div class="no-carry">✅ Tidak ada hari dengan carry-over dalam periode ini. Semua penjemuran selesai dalam 1 sesi.</div>`
+    : `<div class="carry-days-title">Hari dengan Carry-Over atau Penjemuran Tidak Selesai:</div>
+       <div class="table-wrap"><table>
+         <thead><tr>
+           <th>Tanggal</th><th>Outcome</th>
+           <th class="r">Carry-In H (kg)</th><th class="r">Carry-In L (kg)</th><th class="r">Total Carry-In</th>
+           <th class="r">Basah (kg)</th><th class="r">Kering (kg)</th><th class="r">Susut</th>
+           <th>Shift</th>
+         </tr></thead>
+         <tbody>
+         ${problematicRows.map(r => {
+           const susut = computeSusut(r.basah, r.kering, r.carryInHigh, r.carryInLow);
+           const ocs = r.outcomes || [];
+           const hasGagal = ocs.includes('gagal');
+           const hasParsial = ocs.includes('parsial');
+           const rowClass = hasGagal ? 'row-highlight' : '';
+           return `<tr class="${rowClass}">
+             <td>${fmtDateLong(r.date)}</td>
+             <td><div class="badge-row">${ocs.map(o => `<span class="badge oc-${o}">${o}</span>`).join('')}</div></td>
+             <td class="td-carry">${num(r.carryInHigh) > 0 ? fmt(r.carryInHigh,1) : '–'}</td>
+             <td class="td-carry">${num(r.carryInLow) > 0 ? fmt(r.carryInLow,1) : '–'}</td>
+             <td class="td-carry">${num(r.carryInHigh)+num(r.carryInLow) > 0 ? fmt(num(r.carryInHigh)+num(r.carryInLow),1) : '–'}</td>
+             <td class="td-r">${fmt(r.basah)}</td>
+             <td class="td-r">${fmt(r.kering)}</td>
+             <td class="td-r">${susut !== null ? fmt(susut,1) + '%' : '–'}</td>
+             <td><div class="badge-row">${(r.shifts||[]).map(s=>`<span class="badge shift-${s}">${s}</span>`).join('')}</div></td>
+           </tr>`;
+         }).join('')}
+         </tbody>
+       </table></div>`;
+
+  return `
+  <div class="section">
+    <div class="section-title">
+      Evaluasi Efektivitas Penjemuran
+      <span class="section-subtitle">apakah basah selesai dijemur dalam 1 sesi tanpa carry-over?</span>
+    </div>
+    <div class="evaluasi-header">
+      <div class="outcome-stat berhasil">
+        <span class="os-count">${agg.berhasil}</span>
+        <span class="os-label">Hari Berhasil (selesai 1 sesi)</span>
+        <span class="os-pct">${pct(agg.berhasil)}% dari total hari</span>
+      </div>
+      <div class="outcome-stat parsial">
+        <span class="os-count">${agg.parsial}</span>
+        <span class="os-label">Hari Parsial (ada sisa carry-over)</span>
+        <span class="os-pct">${pct(agg.parsial)}% dari total hari</span>
+      </div>
+      <div class="outcome-stat gagal">
+        <span class="os-count">${agg.gagal}</span>
+        <span class="os-label">Hari Gagal (tidak selesai dijemur)</span>
+        <span class="os-pct">${pct(agg.gagal)}% dari total hari</span>
+      </div>
+    </div>
+    <div class="outcome-bar-wrap">
+      <div class="outcome-bar-label">Proporsi Outcome — ${total} hari produksi</div>
+      <div class="outcome-bar">
+        ${bPct > 0 ? `<div class="ob-seg berhasil" style="width:${bPct}%"></div>` : ''}
+        ${pPct > 0 ? `<div class="ob-seg parsial" style="width:${pPct}%"></div>` : ''}
+        ${gPct > 0 ? `<div class="ob-seg gagal" style="width:${gPct}%"></div>` : ''}
+        ${bPct+pPct+gPct === 0 ? `<div class="ob-seg" style="width:100%;background:var(--border)"></div>` : ''}
+      </div>
+      <div class="outcome-bar-legend">
+        <div class="obl-item"><div class="obl-dot berhasil"></div> Berhasil ${agg.berhasil} hari (${bPct}%)</div>
+        <div class="obl-item"><div class="obl-dot parsial"></div> Parsial ${agg.parsial} hari (${pPct}%)</div>
+        <div class="obl-item"><div class="obl-dot gagal"></div> Gagal ${agg.gagal} hari (${gPct}%)</div>
+      </div>
+    </div>
+    ${carryTableHtml}
+  </div>`;
+}
+
+/* ── CHARTS ── */
+function renderCharts() {
+  return `
+  <div class="section">
+    <div class="section-title">Grafik</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Trend Produksi — Basah, Kering &amp; Susut %</div>
+        <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Saldo Rawmat — High EC vs Low EC</div>
+        <div class="chart-wrap"><canvas id="chartStock"></canvas></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── REKAP HARI INI ── */
+function renderRekapSection() {
+  const entries = G.rekap.entries || [];
+  const date = G.rekap.date || todayISO();
+  return `
+  <div class="section">
+    <div class="section-title">Produksi Hari Ini
+      <span class="section-subtitle">${fmtDateLong(date)}, per shift</span>
+    </div>
+    ${!entries.length
+      ? `<div class="empty-state">Belum ada shift yang diinput hari ini.</div>`
+      : `<div class="rekap-grid">${entries.map(e => {
+          const oc = e.outcome || 'berhasil';
+          const susut = computeSusut(e.basah, e.kering, e.carryInHigh, e.carryInLow);
+          const hasCarry = num(e.carryInHigh) + num(e.carryInLow) > 0;
+          return `
+          <div class="rekap-card">
+            <div class="rekap-header">
+              <span class="shift-badge ${esc(e.shift)}">${esc(e.shift||'').toUpperCase()}</span>
+              <span class="rekap-op">${esc(e.operator||'–')}</span>
+              <span class="oc-badge ${oc}">${oc}</span>
+            </div>
+            <div class="rekap-rows">
+              <div class="rekap-row"><span class="rr-lbl">Karung</span><span class="rr-tot">${fmt(e.karung)}</span><span class="rr-h">H: ${fmt(e.karungHigh)}</span><span class="rr-l">L: ${fmt(e.karungLow)}</span></div>
+              <div class="rekap-row"><span class="rr-lbl">Basah</span><span class="rr-tot">${fmt(e.basah)} kg</span><span class="rr-h">H: ${fmt(e.basahHigh)}</span><span class="rr-l">L: ${fmt(e.basahLow)}</span></div>
+              <div class="rekap-row"><span class="rr-lbl">Kering</span><span class="rr-tot">${fmt(e.kering)} kg</span><span class="rr-h">H: ${fmt(e.keringHigh)}</span><span class="rr-l">L: ${fmt(e.keringLow)}</span></div>
+              <div class="rekap-row"><span class="rr-lbl">Block</span><span class="rr-tot">${fmt(e.block)} pcs</span><span class="rr-h">H: ${fmt(e.blockHigh)}</span><span class="rr-l">L: ${fmt(e.blockLow)}</span></div>
+              ${hasCarry ? `<div class="rekap-row"><span class="rr-lbl">Carry-In</span><span class="rr-tot">${fmt(num(e.carryInHigh)+num(e.carryInLow))} kg</span><span class="rr-h">H: ${fmt(e.carryInHigh)}</span><span class="rr-l">L: ${fmt(e.carryInLow)}</span></div>` : ''}
+            </div>
+            ${susut !== null ? `
+            <div class="rekap-susut">
+              Susut: <span class="pct">${susut.toFixed(1)}%</span>
+              ${hasCarry ? `<span class="rekap-carry-note">termasuk carry-in ${fmt(num(e.carryInHigh)+num(e.carryInLow))} kg</span>` : ''}
+            </div>` : ''}
+          </div>`;
+        }).join('')}</div>`}
+  </div>`;
+}
+
+/* ── RIWAYAT TABLE ── */
+function renderRiwayatSection(rows) {
+  return `
+  <div class="section">
+    <div class="section-title">Riwayat Produksi
+      <span class="section-subtitle">${rows.length} hari dalam periode ini</span>
+    </div>
+    ${!rows.length
+      ? `<div class="empty-state">Tidak ada data untuk periode ini.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>Tanggal</th><th>Shift</th>
+            <th class="r">Karung</th>
+            <th class="r">Basah H (kg)</th><th class="r">Basah L (kg)</th>
+            <th class="r">Kering H (kg)</th><th class="r">Kering L (kg)</th>
+            <th class="r">Block H</th><th class="r">Block L</th>
+            <th class="r">Carry-In H</th><th class="r">Carry-In L</th>
+            <th class="r">Susut</th><th>Outcome</th>
+          </tr></thead>
+          <tbody>${rows.map(r => {
+            const susut = computeSusut(r.basah, r.kering, r.carryInHigh, r.carryInLow);
+            const ocs = r.outcomes || [];
+            const hasCarry = num(r.carryInHigh)+num(r.carryInLow) > 0;
+            const rowClass = ocs.includes('gagal') ? 'row-highlight' : '';
+            return `<tr class="${rowClass}">
+              <td>${fmtDateLong(r.date)}</td>
+              <td><div class="badge-row">${(r.shifts||[]).map(s=>`<span class="badge shift-${s}">${s}</span>`).join('')}</div></td>
+              <td class="td-r">${fmt(r.karung)}</td>
+              <td class="td-r">${fmt(r.basahHigh)}</td>
+              <td class="td-r">${fmt(r.basahLow)}</td>
+              <td class="td-r">${fmt(r.keringHigh)}</td>
+              <td class="td-r">${fmt(r.keringLow)}</td>
+              <td class="td-r">${fmt(r.blockHigh)}</td>
+              <td class="td-r">${fmt(r.blockLow)}</td>
+              <td class="${hasCarry ? 'td-carry' : 'td-r'}">${num(r.carryInHigh) > 0 ? fmt(r.carryInHigh,1) : '–'}</td>
+              <td class="${hasCarry ? 'td-carry' : 'td-r'}">${num(r.carryInLow) > 0 ? fmt(r.carryInLow,1) : '–'}</td>
+              <td class="td-r">${susut !== null ? fmt(susut,1)+'%' : '–'}</td>
+              <td><div class="badge-row">${ocs.map(o=>`<span class="badge oc-${o}">${o}</span>`).join('')}</div></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>`}
+  </div>`;
+}
+
+/* ── BATCH TABLE ── */
+function renderBatchSection() {
+  const batches = G.batches;
+  return `
+  <div class="section">
+    <div class="section-title">Rawmat — Daftar Batch
+      <span class="section-subtitle">50 terbaru, semua periode</span>
+    </div>
+    ${!batches.length
+      ? `<div class="empty-state">Belum ada data batch.</div>`
+      : `<div class="table-wrap"><table>
+          <thead><tr>
+            <th>Batch ID</th><th>Tanggal</th><th>Supplier</th><th>Surat Jalan</th>
+            <th>EC Type</th><th class="r">Karung</th><th class="r">Berat (kg)</th>
+            <th>Status</th><th>Operator</th>
+          </tr></thead>
+          <tbody>${batches.map(b => {
+            const ec = (b.ecType||'low').toLowerCase();
+            const st = (b.status||'').toLowerCase();
+            return `<tr>
+              <td class="td-mono">${esc(b.batchId)}</td>
+              <td>${fmtDateLong(b.tanggal)}</td>
+              <td>${esc(b.supplier||'–')}</td>
+              <td>${esc(b.suratJalan||'–')}</td>
+              <td><span class="badge ec-${ec}">${ec.toUpperCase()} EC</span></td>
+              <td class="td-r">${fmt(b.totalKarung)}</td>
+              <td class="td-r">${fmt(b.totalBerat,1)}</td>
+              <td><span class="badge st-${st}">${st}</span></td>
+              <td>${esc(b.operator||'–')}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>`}
+  </div>`;
+}
+
+/* ── EVENTS ── */
+function renderEventsSection() {
+  const events = G.stock ? (G.stock.events || []) : [];
+  return `
+  <div class="section">
+    <div class="section-title">Aktivitas Rawmat Terbaru
+      <span class="section-subtitle">10 transaksi masuk/keluar terakhir</span>
+    </div>
+    ${!events.length
+      ? `<div class="empty-state">Tidak ada aktivitas.</div>`
+      : `<div class="events-list">${events.map(e => {
+          const ec = (e.ec||'low').toLowerCase();
+          const tp = (e.type||'in').toLowerCase();
+          return `
+          <div class="ev-item">
+            <div class="ev-icon ${tp}">${tp === 'in' ? '📦' : '🏭'}</div>
+            <div class="ev-body">
+              <div class="ev-label">${esc(e.label)}</div>
+              <div class="ev-sub">${esc(e.sub)} &nbsp;<span class="badge ec-${ec}">${ec.toUpperCase()} EC</span></div>
+            </div>
+            <div class="ev-right">
+              <div class="ev-kg">${fmt(e.kg,1)} kg</div>
+              <div class="ev-date">${fmtDateLong(e.tanggal)}</div>
+              <div class="ev-dir ${tp}">${tp === 'in' ? '↑ MASUK' : '↓ KELUAR'}</div>
+            </div>
+          </div>`;
+        }).join('')}</div>`}
+  </div>`;
+}
+
+/* ── CHART: TREND ── */
+function renderTrendChart(rows) {
+  const ctx = document.getElementById('chartTrend');
+  if (!ctx) return;
+  if (charts.trend) { charts.trend.destroy(); delete charts.trend; }
+  const data = [...rows].sort((a,b) => a.date.localeCompare(b.date));
+  if (!data.length) {
+    ctx.parentElement.innerHTML = '<div style="text-align:center;padding:40px;color:var(--stone);font-size:13px">Tidak ada data untuk periode ini</div>';
+    return;
+  }
+  charts.trend = new Chart(ctx, {
+    data: {
+      labels: data.map(r => fmtDate(r.date)),
+      datasets: [
+        { type:'bar', label:'Basah (kg)', data: data.map(r=>num(r.basah)),
+          backgroundColor:'rgba(4,132,25,.22)', borderColor:'#048419', borderWidth:1, yAxisID:'y' },
+        { type:'bar', label:'Kering (kg)', data: data.map(r=>num(r.kering)),
+          backgroundColor:'rgba(111,188,51,.7)', borderColor:'#5aab2a', borderWidth:1, yAxisID:'y' },
+        { type:'line', label:'Carry-In (kg)', data: data.map(r => num(r.carryInHigh)+num(r.carryInLow) || null),
+          borderColor:'#e08080', backgroundColor:'rgba(224,128,128,.1)',
+          borderWidth:2, pointRadius:4, pointHoverRadius:6, tension:0.3, yAxisID:'y', fill:false, spanGaps:true },
+        { type:'line', label:'Susut (%)', data: data.map(r => { const s=computeSusut(r.basah,r.kering,r.carryInHigh,r.carryInLow); return s!==null?+s.toFixed(1):null; }),
+          borderColor:'#b88716', backgroundColor:'rgba(255,211,51,.1)',
+          borderWidth:2, pointRadius:3, tension:0.35, yAxisID:'y2', fill:false, spanGaps:true }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12, padding:10 } },
+        tooltip:{ callbacks:{ label(c){ const u=c.dataset.yAxisID==='y2'?'%':' kg'; return ' '+c.dataset.label+': '+(c.parsed.y!=null?Number(c.parsed.y).toLocaleString('id-ID')+u:'–'); } } }
+      },
+      scales:{
+        x:{ ticks:{font:{size:10},maxRotation:50}, grid:{display:false} },
+        y:{ position:'left', ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,.04)'},
+            title:{display:true,text:'kg',font:{size:10},color:'#8a9089'} },
+        y2:{ position:'right', min:0, max:100, ticks:{font:{size:10}},
+             grid:{drawOnChartArea:false}, title:{display:true,text:'%',font:{size:10},color:'#b88716'} }
+      }
+    }
+  });
+}
+
+/* ── CHART: STOCK ── */
+function renderStockChart(s) {
+  const ctx = document.getElementById('chartStock');
+  if (!ctx || !s) return;
+  if (charts.stock) { charts.stock.destroy(); delete charts.stock; }
+  charts.stock = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['High EC','Low EC'],
+      datasets:[
+        { label:'Total Masuk', data:[num(s.inHighKg),num(s.inLowKg)],
+          backgroundColor:'rgba(4,132,25,.25)', borderColor:'#048419', borderWidth:1 },
+        { label:'Total Keluar', data:[num(s.outHighKg),num(s.outLowKg)],
+          backgroundColor:'rgba(160,80,80,.35)', borderColor:'#a05050', borderWidth:1 },
+        { label:'Saldo', data:[num(s.saldoHighKg),num(s.saldoLowKg)],
+          backgroundColor:['rgba(111,188,51,.75)','rgba(52,86,163,.5)'],
+          borderColor:['#6FBC33','#3456a3'], borderWidth:2 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12, padding:10 } },
+        tooltip:{ callbacks:{ label(c){ return ' '+c.dataset.label+': '+Number(c.parsed.y).toLocaleString('id-ID')+' kg'; } } }
+      },
+      scales:{
+        x:{ ticks:{font:{size:12}}, grid:{display:false} },
+        y:{ ticks:{font:{size:10}}, grid:{color:'rgba(0,0,0,.04)'},
+            title:{display:true,text:'kg',font:{size:10},color:'#8a9089'} }
+      }
+    }
+  });
+}
+
+/* ── EXPOSE TO GLOBAL (needed for onclick= HTML attributes) ── */
+window.loadAll = loadAll;
+window.setPeriod = setPeriod;
+
+/* ── INIT ── */
+setPeriod('week');
+loadAll();
+})();
+</script>
+</body>
+</html>
