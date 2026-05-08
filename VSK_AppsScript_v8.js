@@ -372,16 +372,21 @@ function produksiSaveShift(data) {
   const ker = splitField('keringHigh', 'keringLow', 'kering');
   const blk = splitField('blockHigh',  'blockLow',  'block');
 
-  const susut = bas.total > 0
-    ? ((bas.total - ker.total) / bas.total * 100).toFixed(1)
-    : '';
-  const tanggal = todayDate();
-
   const validOutcomes = ['berhasil', 'parsial', 'gagal'];
   const outcome = validOutcomes.indexOf(String(data.outcome || '').toLowerCase()) !== -1
     ? String(data.outcome).toLowerCase() : 'berhasil';
   const carryInH = parseNum(data.carryInHigh);
   const carryInL = parseNum(data.carryInLow);
+
+  // Susut formula — basis = TOTAL BASAH YANG DIJEMUR hari ini
+  // = basah baru (dari rawmat hari ini) + carry-over (dari hari/shift sebelumnya)
+  // Tanpa carry-in di basis, susut bisa keluar negatif (sampai >1000%)
+  // saat carry-over besar tapi basah baru kecil.
+  const totalBasahDijemur = bas.total + carryInH + carryInL;
+  const susut = totalBasahDijemur > 0
+    ? ((totalBasahDijemur - ker.total) / totalBasahDijemur * 100).toFixed(1)
+    : '';
+  const tanggal = todayDate();
 
   sheet.appendRow([
     new Date(), tanggal, data.shift, data.operator,
