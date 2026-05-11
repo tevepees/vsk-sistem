@@ -246,55 +246,6 @@ tbody tr:hover td{background:var(--cream);}
 .sc-time{font-family:var(--mono);font-size:10px;color:var(--stone);}
 
 .susut-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--amber-bg);border:1px solid #e8d0a8;border-radius:var(--r);margin-top:6px;transition:opacity .2s;}
-
-/* === Helper text di field/section === */
-.f-hint{font-size:10.5px;color:var(--sand);font-style:italic;margin-top:2px;line-height:1.4;}
-.sec-hint{font-size:11px;color:var(--sand);font-style:italic;margin:-4px 0 12px;line-height:1.45;display:block;}
-
-/* === Outcome buttons (status pengeringan) === */
-.outcome-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
-.outcome-btn{padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:white;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--brown);cursor:pointer;transition:all .15s;touch-action:manipulation;}
-.outcome-btn:hover{border-color:var(--leaf2);}
-.outcome-btn.active[data-outcome="berhasil"]{border-color:var(--leaf);background:var(--leaf-bg);color:var(--leaf);font-weight:600;}
-.outcome-btn.active[data-outcome="parsial"]{border-color:var(--amber);background:var(--amber-bg);color:var(--amber);font-weight:600;}
-.outcome-btn.active[data-outcome="gagal"]{border-color:var(--rose);background:var(--rose-bg);color:var(--rose);font-weight:600;}
-
-/* === Carry-in collapsible section === */
-.carryin-toggle{display:block;width:100%;padding:11px 14px;margin-top:10px;border:1.5px dashed var(--border2);border-radius:var(--r);background:transparent;color:var(--brown);font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;transition:all .15s;touch-action:manipulation;}
-.carryin-toggle:hover{border-color:var(--leaf2);color:var(--leaf);}
-.carryin-section{margin-top:10px;padding:12px 14px;background:var(--leaf-bg);border-radius:var(--r);}
-.carryin-hint{font-size:11px;color:var(--brown);font-style:italic;margin-bottom:10px;line-height:1.45;}
-
-/* === Outcome badge di log/history === */
-.outcome-badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:99px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-left:6px;}
-.outcome-badge.berhasil{background:var(--leaf-bg);color:var(--leaf);}
-.outcome-badge.parsial{background:var(--amber-bg);color:var(--amber);}
-.outcome-badge.gagal{background:var(--rose-bg);color:var(--rose);}
-
-/* === Help button + modal panduan === */
-.btn-help{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid var(--leaf);border-radius:99px;background:white;color:var(--leaf);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;touch-action:manipulation;}
-.btn-help:hover{background:var(--leaf-bg);}
-.help-overlay{position:fixed;inset:0;background:rgba(3,71,60,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
-.help-overlay.show{display:flex;animation:fadeUp .2s ease;}
-.help-modal{background:white;border-radius:18px;max-width:640px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
-.help-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
-.help-title{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--char);}
-.help-close{border:none;background:transparent;font-size:24px;color:var(--sand);cursor:pointer;line-height:1;padding:4px 10px;}
-.help-tabs{display:flex;gap:4px;padding:10px 22px 0;border-bottom:1px solid var(--border);background:var(--cream);overflow-x:auto;scrollbar-width:none;}
-.help-tabs::-webkit-scrollbar{display:none;}
-.help-tab{padding:10px 14px;border:none;background:transparent;font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--sand);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap;}
-.help-tab.active{color:var(--leaf);border-bottom-color:var(--leaf);font-weight:600;}
-.help-body{padding:22px 26px;overflow-y:auto;font-size:13.5px;color:var(--char);line-height:1.65;}
-.help-body h4{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--leaf);margin:18px 0 8px;}
-.help-body h4:first-child{margin-top:0;}
-.help-body ol{padding-left:20px;display:flex;flex-direction:column;gap:8px;}
-.help-body ol li{padding-left:4px;}
-.help-body ol li strong{color:var(--char);}
-.help-body code{background:var(--cream2);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;}
-.help-tip{background:var(--leaf-bg);border-left:3px solid var(--leaf);padding:10px 14px;border-radius:6px;margin:10px 0;font-size:12.5px;color:var(--char);}
-.help-warn{background:var(--amber-bg);border-left:3px solid var(--amber);padding:10px 14px;border-radius:6px;margin:10px 0;font-size:12.5px;color:var(--char);}
-.help-pane{display:none;}
-.help-pane.active{display:block;}
 .susut-lbl{font-size:12px;font-weight:500;color:var(--amber);}
 .susut-num{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--amber);}
 
@@ -562,7 +513,6 @@ tbody tr:hover td{background:var(--cream);}
         <button class="help-tab" data-pane="istilah" type="button">Istilah</button>
       </div>
       <div class="help-body">
-<<<<<<< HEAD
         <!-- TAB 1: Pengeringan biasa -->
         <div class="help-pane active" data-pane="biasa">
           <h4>Kapan dipakai</h4>
@@ -620,60 +570,10 @@ tbody tr:hover td{background:var(--cream);}
 
           <div class="help-tip">💡 <strong>Penting:</strong> Carry-over <strong>SUDAH</strong> tercatat di Bahan Baku saat pertama kali datang dari supplier. Sistem hanya butuh tahu bahwa basah itu sekarang dijemur, supaya susut & stok tetap akurat — TIDAK akan dipotong dua kali dari stok.</div>
 
-=======
-        <div class="help-pane active" data-pane="biasa">
-          <h4>Kapan dipakai</h4>
-          <p>Setiap akhir shift produksi (pagi atau sore) — saat hasil pengeringan sudah keluar dari mesin.</p>
-          <h4>Langkah-langkah</h4>
-          <ol>
-            <li><strong>Pilih shift</strong> sekarang: <em>Pagi</em> atau <em>Sore</em>.</li>
-            <li><strong>Tulis nama operator</strong> di kotak "Nama operator".</li>
-            <li>Di bagian <em>Produksi High EC</em>, isi 4 angka:
-              <ul>
-                <li><strong>Karung dijemur</strong>: berapa karung masuk pengeringan.</li>
-                <li><strong>Bahan basah (kg)</strong>: berat basah masuk pengeringan.</li>
-                <li><strong>Hasil kering (kg)</strong>: berat kering keluar pengeringan.</li>
-                <li><strong>Block jadi (pcs)</strong>: berapa block sudah dipres.</li>
-              </ul>
-            </li>
-            <li>Lakukan sama untuk <em>Produksi Low EC</em>. Kalau hari ini tidak ada Low EC, kosongkan.</li>
-            <li>Cek <strong>Susut</strong> otomatis. Wajar 30%–60%. "—" berarti data belum lengkap.</li>
-            <li>Pilih <strong>Status pengeringan</strong>: tap "Berhasil" (default).</li>
-            <li>Tulis <strong>Catatan</strong> kalau ada hal khusus. Boleh kosong.</li>
-            <li>Tap tombol hijau <code>Simpan Data Shift</code>.</li>
-            <li>Otomatis pindah ke tab <em>Rekap Hari Ini</em> → tap <code>Salin laporan untuk WhatsApp</code> → grup WA terbuka → <strong>tap & tahan kotak chat</strong> → Paste → Send.</li>
-          </ol>
-          <div class="help-tip">💡 <strong>Tips:</strong> Total Block (High + Low) otomatis dihitung sistem. Tidak perlu jumlahkan manual.</div>
-        </div>
-        <div class="help-pane" data-pane="gagal">
-          <h4>Kapan dipakai</h4>
-          <p>Saat <strong>pengeringan gagal total atau sebagian</strong> (hujan deras, mesin rusak), basah masih sisa di lapangan.</p>
-          <div class="help-warn">⚠️ <strong>JANGAN</strong> input "Hasil kering = 0" tanpa pilih Status "Gagal". Susut akan ngaco (sampai ribuan persen).</div>
-          <h4>Skenario A — Hari ini gagal total (kering = 0)</h4>
-          <ol>
-            <li>Isi <strong>Karung & Basah</strong> sesuai realita.</li>
-            <li>Isi <strong>Kering = 0</strong> dan <strong>Block = 0</strong>.</li>
-            <li>Pilih Status <strong>"Gagal"</strong>.</li>
-            <li>Tulis Catatan alasan-nya.</li>
-            <li>Simpan.</li>
-          </ol>
-          <p>Sistem ingat basah ini "menggantung" — tidak dipotong dari stok rawmat lagi besok.</p>
-          <h4>Skenario B — Hari ini jemur ulang basah dari kemarin (carry-over)</h4>
-          <ol>
-            <li>Isi <strong>Karung & Basah baru</strong> kalau ada. Boleh 0 kalau cuma jemur sisa kemarin.</li>
-            <li>Isi <strong>Hasil kering</strong> sesuai realita.</li>
-            <li>Tap <code>+ Ada basah carry-over dari shift/hari sebelumnya?</code></li>
-            <li>Isi berapa kg dari kemarin yang dijemur ulang (<strong>Carry-In High/Low EC</strong>).</li>
-            <li>Status: <em>Berhasil</em> kalau tuntas, <em>Parsial</em> kalau masih sisa lagi.</li>
-            <li>Simpan.</li>
-          </ol>
-          <div class="help-tip">💡 Carry-over <strong>SUDAH</strong> tercatat di Bahan Baku. Sistem TIDAK akan potong dari stok dua kali.</div>
->>>>>>> staging
           <h4>Contoh angka</h4>
           <ul>
             <li>Kemarin: gagal jemur 290 kg Low EC → Status "Gagal"</li>
             <li>Hari ini: basah baru 10 kg, carry-over 290 kg, hasil kering 280 kg</li>
-<<<<<<< HEAD
             <li>Susut sistem hitung: (300 − 280) ÷ 300 = <strong>6.7%</strong> ✓</li>
           </ul>
         </div>
@@ -694,25 +594,6 @@ tbody tr:hover td{background:var(--cream);}
           </ul>
 
           <div class="help-tip">💡 Kalau bingung tentang istilah lain, tanya supervisor produksi atau Tony.</div>
-=======
-            <li>Susut: (300 − 280) ÷ 300 = <strong>6.7%</strong> ✓</li>
-          </ul>
-        </div>
-        <div class="help-pane" data-pane="istilah">
-          <h4>Istilah Penting</h4>
-          <ul>
-            <li><strong>Karung</strong>: kemasan rawmat (cocopeat basah) di pengeringan.</li>
-            <li><strong>Basah (kg)</strong>: berat cocopeat basah masuk pengeringan.</li>
-            <li><strong>Kering (kg)</strong>: berat cocopeat kering keluar pengeringan.</li>
-            <li><strong>Block (pcs)</strong>: cocopeat kering yang sudah dipres.</li>
-            <li><strong>Susut</strong>: % kehilangan berat dari basah ke kering. Wajar 30%–60%.</li>
-            <li><strong>High EC</strong>: kandungan garam mineral tinggi.</li>
-            <li><strong>Low EC</strong>: kandungan garam rendah, lebih premium.</li>
-            <li><strong>Carry-over</strong>: basah dari kemarin yang dijemur ulang hari ini.</li>
-            <li><strong>Outcome</strong>: status pengeringan — Berhasil / Parsial / Gagal.</li>
-          </ul>
-          <div class="help-tip">💡 Tanya supervisor/Tony kalau ada istilah yang belum jelas.</div>
->>>>>>> staging
         </div>
       </div>
     </div>
@@ -747,20 +628,12 @@ tbody tr:hover td{background:var(--cream);}
     </div>
 
     <div class="sec"><span class="sec-title">Produksi High EC</span><span class="sec-line"></span><span class="ec-pill high">High</span></div>
-<<<<<<< HEAD
     <span class="sec-hint">Isi data produksi cocopeat <strong>High EC</strong> hari ini. Kalau hari ini tidak ada produksi High EC, biarkan kosong.</span>
-=======
-    <span class="sec-hint">Isi data produksi cocopeat <strong>High EC</strong> hari ini. Kalau tidak ada, biarkan kosong.</span>
->>>>>>> staging
     <div class="grid2">
       <div class="field">
         <label class="f-label">Karung dijemur</label>
         <div class="f-wrap"><input type="number" id="inp-karung-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
-<<<<<<< HEAD
         <div class="f-hint">Jumlah karung yang masuk ke pengeringan hari ini.</div>
-=======
-        <div class="f-hint">Jumlah karung yang masuk pengeringan hari ini.</div>
->>>>>>> staging
       </div>
       <div class="field">
         <label class="f-label">Bahan basah</label>
@@ -770,20 +643,12 @@ tbody tr:hover td{background:var(--cream);}
       <div class="field">
         <label class="f-label">Hasil kering</label>
         <div class="f-wrap"><input type="number" id="inp-kering-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
-<<<<<<< HEAD
         <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
-=======
-        <div class="f-hint">Total cocopeat kering keluar dari pengeringan.</div>
->>>>>>> staging
       </div>
       <div class="field">
         <label class="f-label">Block jadi</label>
         <div class="f-wrap"><input type="number" id="inp-block-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
-<<<<<<< HEAD
         <div class="f-hint">Jumlah block yang sudah dipres jadi (siap kirim).</div>
-=======
-        <div class="f-hint">Block High EC yang sudah dipres jadi (siap kirim).</div>
->>>>>>> staging
       </div>
     </div>
 
@@ -803,20 +668,12 @@ tbody tr:hover td{background:var(--cream);}
       <div class="field">
         <label class="f-label">Hasil kering</label>
         <div class="f-wrap"><input type="number" id="inp-kering-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
-<<<<<<< HEAD
         <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
-=======
-        <div class="f-hint">Total cocopeat kering keluar dari pengeringan.</div>
->>>>>>> staging
       </div>
       <div class="field">
         <label class="f-label">Block jadi</label>
         <div class="f-wrap"><input type="number" id="inp-block-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
-<<<<<<< HEAD
         <div class="f-hint">Jumlah block Low EC yang sudah dipres jadi.</div>
-=======
-        <div class="f-hint">Block Low EC yang sudah dipres jadi.</div>
->>>>>>> staging
       </div>
     </div>
 
@@ -824,17 +681,10 @@ tbody tr:hover td{background:var(--cream);}
       <span class="susut-lbl">Susut penjemuran (total)</span>
       <span class="susut-num" id="susut-val">—</span>
     </div>
-<<<<<<< HEAD
     <div class="sec-hint" style="margin-top:6px">Susut otomatis dihitung dari (Basah dijemur − Kering) ÷ Basah dijemur. <strong>Basah dijemur</strong> = basah baru + carry-over (kalau ada).</div>
 
     <div class="sec"><span class="sec-title">Status pengeringan</span><span class="sec-line"></span></div>
     <span class="sec-hint">Pilih sesuai kondisi pengeringan hari ini. <strong>Berhasil</strong> = lancar normal · <strong>Parsial</strong> = sebagian gagal jemur · <strong>Gagal</strong> = tidak ada hasil kering (akan jadi carry-over besok).</span>
-=======
-    <div class="sec-hint" style="margin-top:6px">Susut otomatis dari (Basah dijemur − Kering) ÷ Basah dijemur. <strong>Basah dijemur</strong> = basah baru + carry-over (kalau ada).</div>
-
-    <div class="sec"><span class="sec-title">Status pengeringan</span><span class="sec-line"></span></div>
-    <span class="sec-hint">Pilih sesuai kondisi hari ini. <strong>Berhasil</strong> = lancar · <strong>Parsial</strong> = sebagian gagal · <strong>Gagal</strong> = tidak ada hasil kering (basah jadi carry-over besok).</span>
->>>>>>> staging
     <div class="outcome-row" id="outcome-row">
       <button class="outcome-btn active" data-outcome="berhasil" type="button">Berhasil</button>
       <button class="outcome-btn" data-outcome="parsial" type="button">Parsial</button>
@@ -1291,11 +1141,7 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   function calcSusut(){
-<<<<<<< HEAD
     // Total basah yang DIJEMUR = basah baru + carry-over
-=======
-    // Total basah dijemur = basah baru + carry-over
->>>>>>> staging
     var basahBaru = (parseFloat($('inp-basah-high').value)  || 0)
                   + (parseFloat($('inp-basah-low').value)   || 0);
     var carryIn   = (parseFloat($('inp-carryin-high').value) || 0)
@@ -1314,22 +1160,6 @@ tbody tr:hover td{background:var(--cream);}
     }
   }
 
-  function setOutcome(value){
-    currentOutcome = value;
-    var btns = qsa('.outcome-btn');
-    for(var i=0; i<btns.length; i++){
-      btns[i].classList.toggle('active', btns[i].getAttribute('data-outcome') === value);
-    }
-  }
-
-  function resetCarryIn(){
-    carryInVisible = false;
-    $('carryin-section').style.display = 'none';
-    $('btn-carryin-toggle').textContent = '+ Ada basah carry-over dari shift/hari sebelumnya?';
-    var ciH = $('inp-carryin-high'); if(ciH) ciH.value = '';
-    var ciL = $('inp-carryin-low');  if(ciL) ciL.value = '';
-  }
-
   async function submitShift(){
     var op       = $('inp-op').value.trim();
     var karungH  = parseFloat($('inp-karung-high').value) || 0;
@@ -1340,8 +1170,6 @@ tbody tr:hover td{background:var(--cream);}
     var keringL  = parseFloat($('inp-kering-low').value)  || 0;
     var blockH   = parseFloat($('inp-block-high').value)  || 0;
     var blockL   = parseFloat($('inp-block-low').value)   || 0;
-    var carryInH = parseFloat($('inp-carryin-high').value) || 0;
-    var carryInL = parseFloat($('inp-carryin-low').value)  || 0;
 
     var karung = karungH + karungL;
     var basah  = basahH  + basahL;
@@ -1353,9 +1181,7 @@ tbody tr:hover td{background:var(--cream);}
     var carryInL  = parseFloat($('inp-carryin-low').value)  || 0;
 
     if(!op){ toast('Isi nama operator dulu', 'err'); return; }
-    if(!karung && !basah && !block && (carryInH + carryInL) === 0){
-      toast('Isi minimal satu data produksi', 'err'); return;
-    }
+    if(!karung && !basah && !block){ toast('Isi minimal satu data produksi', 'err'); return; }
 
     var entry = {
       date: window.VSK.todayStr(),
@@ -1479,22 +1305,13 @@ tbody tr:hover td{background:var(--cream);}
       var blockLbl = 'Block (pcs)' + (hasBreak
         ? '<br><span style="font-size:9px;color:var(--sand)">H:' + bh + ' / L:' + bl + '</span>'
         : '');
-<<<<<<< HEAD
       var outcome = e.outcome || 'berhasil';
       var outcomeBadge = (outcome !== 'berhasil')
-=======
-      var outcome = (e.outcome || 'berhasil').toLowerCase();
-      var outcomeBadge = outcome !== 'berhasil'
->>>>>>> staging
         ? '<span class="outcome-badge ' + outcome + '">' + outcome.charAt(0).toUpperCase() + outcome.slice(1) + '</span>'
         : '';
       var carryTotal = (parseFloat(e.carryInHigh) || 0) + (parseFloat(e.carryInLow) || 0);
       var carryNote = carryTotal > 0
-<<<<<<< HEAD
         ? '<div class="log-note" style="background:var(--leaf-bg);color:var(--leaf)">Carry-over: ' + carryTotal.toFixed(1) + ' kg basah dari sebelumnya (sudah dikecualikan dari rawmat)</div>'
-=======
-        ? '<div class="log-note" style="background:var(--leaf-bg);color:var(--leaf)">↻ Carry-over: ' + carryTotal.toFixed(1) + ' kg basah dari shift/hari sebelumnya (sudah tercatat di Bahan Baku)</div>'
->>>>>>> staging
         : '';
       return '<div class="log-card">' +
         '<div class="log-head">' +
@@ -1517,7 +1334,6 @@ tbody tr:hover td{background:var(--cream);}
 
     rekapCache = {
       entries: entries,
-      tCh: tCh, tCl: tCl, tCarry: tCarry, totalDijemur: totalDijemur,
       tK: tK, tB: tB, tKg: tKg, tBl: tBl,
       tKh: tKh, tKl: tKl,
       tBh: tBh, tBll: tBll,
@@ -1576,11 +1392,7 @@ tbody tr:hover td{background:var(--cream);}
       var ecRows = '';
       if(hasHigh) ecRows += ecBlock('High EC', 'high', r.karungHigh, r.basahHigh, (r.carryInHigh||0), r.keringHigh, r.blockHigh);
       if(hasLow)  ecRows += ecBlock('Low EC',  'low',  r.karungLow,  r.basahLow,  (r.carryInLow||0),  r.keringLow,  r.blockLow);
-<<<<<<< HEAD
       // Fallback: data legacy yang tidak ter-tag (harusnya tidak ada setelah migrasi v8, tapi jaga-jaga)
-=======
-      // Fallback: data legacy yang tidak ter-tag
->>>>>>> staging
       if(!ecRows) ecRows = ecBlock('Total', 'legacy', r.karung, r.basah, 0, r.kering, r.block);
 
       return '<div class="riwayat-card">' +
@@ -1709,11 +1521,7 @@ tbody tr:hover td{background:var(--cream);}
     $('btn-refresh-history').addEventListener('click', renderHistory);
     $('btn-export-wa').addEventListener('click', exportWA);
 
-<<<<<<< HEAD
     // Help modal — open / close / tab switch
-=======
-    // Help modal — open/close/tab switch
->>>>>>> staging
     var helpOverlay = $('help-overlay-produksi');
     $('btn-help-produksi').addEventListener('click', function(){
       helpOverlay.classList.add('show');
