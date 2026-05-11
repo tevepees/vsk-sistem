@@ -188,14 +188,55 @@ function cekStatus() {
 function migrateToV8() {
   const result = {
     ok: true,
-    schemaVersion: 'v8',
+    schemaVersion: 'v8.1',
     produksi: migrateProduksiToV8(),
-    rawmat: migrateRawmatToV8()
+    rawmat: migrateRawmatToV8(),
+    carryOver: migrateCarryOver()
   };
-  console.log('=== VSK MIGRATION v8 ===');
+  console.log('=== VSK MIGRATION v8.1 ===');
   console.log(JSON.stringify(result, null, 2));
-  // Throw with result supaya output PASTI tampil di execution panel
   throw new Error('MIGRATION RESULT (bukan error sungguhan, ini cara supaya hasilnya kelihatan):\n\n' + JSON.stringify(result, null, 2));
+}
+
+/**
+ * Tambah 3 kolom: Outcome, Carry-In High EC (kg), Carry-In Low EC (kg)
+ * di akhir tab Produksi. Idempotent. Default outcome='berhasil', carryIn=0.
+ */
+function migrateCarryOver() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PRODUKSI);
+  if (!sheet) return { skipped: true, reason: 'Sheet Produksi tidak ada' };
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+
+  if (headers.indexOf('Outcome') !== -1 && headers.indexOf('Carry-In High EC (kg)') !== -1) {
+    return { alreadyMigrated: true, message: 'Carry-over kolom sudah ada' };
+  }
+
+  // Append 3 kolom di akhir
+  const newCols = ['Outcome', 'Carry-In High EC (kg)', 'Carry-In Low EC (kg)'];
+  const startCol = lastCol + 1;
+  newCols.forEach(function(name, i){
+    sheet.getRange(1, startCol + i).setValue(name);
+  });
+  sheet.getRange(1, startCol, 1, 3)
+    .setFontWeight('bold').setBackground('#048419').setFontColor('#ffffff');
+
+  // Backfill: existing rows → outcome='berhasil', carryIn=0
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const dataCount = lastRow - 1;
+    const fillData = [];
+    for (let i = 0; i < dataCount; i++) fillData.push(['berhasil', 0, 0]);
+    sheet.getRange(2, startCol, dataCount, 3).setValues(fillData);
+  }
+
+  return {
+    migrated: true,
+    rowsAffected: lastRow - 1,
+    columnsAdded: newCols,
+    message: 'Schema v8.1 (NC-G carry-over) — siap pakai'
+  };
 }
 
 function migrateProduksiToV8() {
@@ -372,16 +413,25 @@ function produksiSaveShift(data) {
   const ker = splitField('keringHigh', 'keringLow', 'kering');
   const blk = splitField('blockHigh',  'blockLow',  'block');
 
+<<<<<<< HEAD
+=======
+  // Outcome + carry-over (NC-G fix)
+>>>>>>> staging
   const validOutcomes = ['berhasil', 'parsial', 'gagal'];
   const outcome = validOutcomes.indexOf(String(data.outcome || '').toLowerCase()) !== -1
     ? String(data.outcome).toLowerCase() : 'berhasil';
   const carryInH = parseNum(data.carryInHigh);
   const carryInL = parseNum(data.carryInLow);
 
+<<<<<<< HEAD
   // Susut formula — basis = TOTAL BASAH YANG DIJEMUR hari ini
   // = basah baru (dari rawmat hari ini) + carry-over (dari hari/shift sebelumnya)
   // Tanpa carry-in di basis, susut bisa keluar negatif (sampai >1000%)
   // saat carry-over besar tapi basah baru kecil.
+=======
+  // Susut basis = TOTAL BASAH DIJEMUR (basah baru + carry-over)
+  // Tanpa carry-in di basis, susut bisa keluar sampai >1000% saat carry besar.
+>>>>>>> staging
   const totalBasahDijemur = bas.total + carryInH + carryInL;
   const susut = totalBasahDijemur > 0
     ? ((totalBasahDijemur - ker.total) / totalBasahDijemur * 100).toFixed(1)
@@ -434,7 +484,11 @@ function getRekapByDate(date) {
       susut: row[PROD_COL.SUSUT] ? String(row[PROD_COL.SUSUT]) : '',
       notes: row[PROD_COL.NOTES] || '',
       time:  row[PROD_COL.TIME]  || '',
+<<<<<<< HEAD
       outcome:     row[PROD_COL.OUTCOME]   || 'berhasil',
+=======
+      outcome:     String(row[PROD_COL.OUTCOME] || 'berhasil').toLowerCase(),
+>>>>>>> staging
       carryInHigh: parseNum(row[PROD_COL.CARRYIN_H]),
       carryInLow:  parseNum(row[PROD_COL.CARRYIN_L])
     });
@@ -472,6 +526,10 @@ function getRiwayat() {
     b.kering     += parseNum(row[PROD_COL.KERING]);
     b.keringHigh += parseNum(row[PROD_COL.KERING_H]);
     b.keringLow  += parseNum(row[PROD_COL.KERING_L]);
+    b.carryInHigh += parseNum(row[PROD_COL.CARRYIN_H]);
+    b.carryInLow  += parseNum(row[PROD_COL.CARRYIN_L]);
+    const outc = String(row[PROD_COL.OUTCOME] || 'berhasil').toLowerCase();
+    if (b.outcomes.indexOf(outc) === -1) b.outcomes.push(outc);
     b.block      += parseNum(row[PROD_COL.BLOCK]);
     b.blockHigh  += parseNum(row[PROD_COL.BLOCK_H]);
     b.blockLow   += parseNum(row[PROD_COL.BLOCK_L]);
@@ -679,6 +737,8 @@ function getRawmatStock() {
   // ── OUTFLOW: split by EC dari Produksi ──
   const prodSheet = getOrCreateSheet(SHEET_PRODUKSI, HEADERS_PRODUKSI);
   const prod = prodSheet.getDataRange().getValues();
+  // Outflow = Basah dijemur - Carry-in. Carry-in adalah basah dari hari sebelumnya
+  // yang sudah pernah dipotong dari rawmat — kalau dihitung lagi, double count.
   let outHighKg = 0, outLowKg = 0, outHighKarung = 0, outLowKarung = 0;
   let lastOut = null;
   for (let i = 1; i < prod.length; i++) {
