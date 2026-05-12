@@ -401,6 +401,20 @@ tbody tr:hover td{background:var(--cream);}
 .rc-stats span{color:var(--brown);}
 .rc-stats span strong{color:var(--char);font-weight:600;}
 
+/* Block matrix 2x2 (varian × EC) — v8.2 */
+.block-matrix{display:grid;grid-template-columns:84px 1fr 1fr;gap:6px;margin-top:8px;background:white;border:1px solid var(--border);border-radius:var(--r);padding:10px;}
+.bm-cell-empty{}
+.bm-head{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--brown);text-align:center;padding:6px 4px;letter-spacing:.04em;background:var(--cream2);border-radius:6px;}
+.bm-rowlabel{font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;letter-spacing:.04em;}
+.bm-rowlabel.high{color:var(--leaf);}
+.bm-rowlabel.low{color:var(--amber);}
+.bm-input{position:relative;}
+.bm-input input{width:100%;padding:11px 38px 11px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:white;color:var(--char);font-family:var(--mono);font-size:15px;font-weight:500;outline:none;transition:all .15s;-webkit-appearance:none;text-align:right;}
+.bm-input input:focus{border-color:var(--leaf2);box-shadow:0 0 0 3px rgba(79,138,92,.09);}
+.bm-unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--stone);pointer-events:none;}
+.bm-total{margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--brown);text-align:right;padding-right:4px;}
+.bm-total strong{color:var(--char);font-weight:600;font-size:13px;}
+
 /* Outcome selector (NC-G carry-over) */
 .outcome-row{display:flex;gap:8px;margin-bottom:10px;}
 .outcome-btn{flex:1;padding:9px 0;border-radius:var(--r);border:1.5px solid var(--border);background:white;font-size:13px;font-weight:500;color:var(--stone);cursor:pointer;transition:all .15s;touch-action:manipulation;font-family:var(--sans);}
@@ -645,11 +659,6 @@ tbody tr:hover td{background:var(--cream);}
         <div class="f-wrap"><input type="number" id="inp-kering-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
         <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
       </div>
-      <div class="field">
-        <label class="f-label">Block jadi</label>
-        <div class="f-wrap"><input type="number" id="inp-block-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
-        <div class="f-hint">Jumlah block yang sudah dipres jadi (siap kirim).</div>
-      </div>
     </div>
 
     <div class="sec"><span class="sec-title">Produksi Low EC</span><span class="sec-line"></span><span class="ec-pill low">Low</span></div>
@@ -670,12 +679,22 @@ tbody tr:hover td{background:var(--cream);}
         <div class="f-wrap"><input type="number" id="inp-kering-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
         <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
       </div>
-      <div class="field">
-        <label class="f-label">Block jadi</label>
-        <div class="f-wrap"><input type="number" id="inp-block-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">pcs</span></div>
-        <div class="f-hint">Jumlah block Low EC yang sudah dipres jadi.</div>
-      </div>
     </div>
+
+    <div class="sec"><span class="sec-title">Block diproduksi</span><span class="sec-line"></span><span class="sec-tag">2 varian × 2 EC</span></div>
+    <span class="sec-hint">Block yang sudah dipres hari ini, per ukuran × per EC. Kalau salah satu kotak tidak ada produksi, biarkan kosong.</span>
+    <div class="block-matrix">
+      <div class="bm-cell-empty"></div>
+      <div class="bm-head bm-head-1kg">Block 1kg</div>
+      <div class="bm-head bm-head-5kg">Block 5kg</div>
+      <div class="bm-rowlabel high">High EC</div>
+      <div class="bm-input"><input type="number" id="inp-block-1kg-high" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-input"><input type="number" id="inp-block-5kg-high" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-rowlabel low">Low EC</div>
+      <div class="bm-input"><input type="number" id="inp-block-1kg-low" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-input"><input type="number" id="inp-block-5kg-low" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+    </div>
+    <div class="bm-total">Total block: <strong id="bm-total-val">0</strong> pcs</div>
 
     <div class="susut-row" id="susut-row" style="opacity:.45">
       <span class="susut-lbl">Susut penjemuran (total)</span>
@@ -743,14 +762,19 @@ tbody tr:hover td{background:var(--cream);}
       </div>
     </div>
     <div class="prog-card">
-      <div class="prog-head"><span class="prog-lbl">Block vs Target</span><span class="prog-pct" id="r-pct">—</span></div>
-      <div class="prog-track"><div class="prog-fill" id="r-bar" style="width:0%"></div></div>
-      <div class="prog-foot"><span>Target: <strong>60 pcs</strong></span><span>Susut: <strong id="r-susut">—</strong></span></div>
+      <div class="prog-head"><span class="prog-lbl">Block 1kg vs Target</span><span class="prog-pct" id="r-pct-1kg">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="r-bar-1kg" style="width:0%"></div></div>
+      <div class="prog-foot"><span>Target: <strong>100 pcs</strong></span><span id="r-1kg-sisa"></span></div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-head"><span class="prog-lbl">Block 5kg vs Target</span><span class="prog-pct" id="r-pct-5kg">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="r-bar-5kg" style="width:0%"></div></div>
+      <div class="prog-foot"><span>Target: <strong>10 pcs</strong></span><span id="r-5kg-sisa"></span></div>
     </div>
     <div class="prog-card">
       <div class="prog-head"><span class="prog-lbl">Kering vs Target</span><span class="prog-pct" id="r-kering-pct">—</span></div>
       <div class="prog-track"><div class="prog-fill" id="r-kering-bar" style="width:0%"></div></div>
-      <div class="prog-foot"><span>Target: <strong>300 kg</strong></span><span id="r-kering-sisa"></span></div>
+      <div class="prog-foot"><span>Target: <strong>150 kg</strong></span><span id="r-kering-sisa"></span><span>Susut: <strong id="r-susut">—</strong></span></div>
     </div>
     <div class="sec">
       <span class="sec-title">Log per shift</span>
@@ -1083,8 +1107,9 @@ tbody tr:hover td{background:var(--cream);}
 (function(){
   'use strict';
 
-  var TARGET_BLOCK  = 60;
-  var TARGET_KERING = 300;
+  var TARGET_BLOCK_1KG = 100;
+  var TARGET_BLOCK_5KG = 10;
+  var TARGET_KERING    = 150;
 
   var section = document.getElementById('mod-produksi');
   var $  = window.VSK.$;
@@ -1132,6 +1157,15 @@ tbody tr:hover td{background:var(--cream);}
     }
   }
 
+  function updateBmTotal(){
+    var t = (parseFloat($('inp-block-1kg-high').value) || 0)
+          + (parseFloat($('inp-block-1kg-low').value)  || 0)
+          + (parseFloat($('inp-block-5kg-high').value) || 0)
+          + (parseFloat($('inp-block-5kg-low').value)  || 0);
+    var el = $('bm-total-val');
+    if(el) el.textContent = t;
+  }
+
   function resetCarryIn(){
     carryInVisible = false;
     $('carryin-section').style.display = 'none';
@@ -1168,8 +1202,13 @@ tbody tr:hover td{background:var(--cream);}
     var basahL   = parseFloat($('inp-basah-low').value)   || 0;
     var keringH  = parseFloat($('inp-kering-high').value) || 0;
     var keringL  = parseFloat($('inp-kering-low').value)  || 0;
-    var blockH   = parseFloat($('inp-block-high').value)  || 0;
-    var blockL   = parseFloat($('inp-block-low').value)   || 0;
+    // Block varian 2x2 — v8.2
+    var block1kgH = parseFloat($('inp-block-1kg-high').value) || 0;
+    var block1kgL = parseFloat($('inp-block-1kg-low').value)  || 0;
+    var block5kgH = parseFloat($('inp-block-5kg-high').value) || 0;
+    var block5kgL = parseFloat($('inp-block-5kg-low').value)  || 0;
+    var blockH = block1kgH + block5kgH;
+    var blockL = block1kgL + block5kgL;
 
     var karung = karungH + karungL;
     var basah  = basahH  + basahL;
@@ -1191,6 +1230,8 @@ tbody tr:hover td{background:var(--cream);}
       basah: basah,   basahHigh: basahH,   basahLow: basahL,
       kering: kering, keringHigh: keringH, keringLow: keringL,
       block: block,   blockHigh: blockH,   blockLow: blockL,
+      block1kgHigh: block1kgH, block1kgLow: block1kgL,
+      block5kgHigh: block5kgH, block5kgLow: block5kgL,
       outcome: currentOutcome,
       carryInHigh: carryInH, carryInLow: carryInL,
       notes: notes,
@@ -1214,10 +1255,12 @@ tbody tr:hover td{background:var(--cream);}
        'inp-karung-high','inp-karung-low',
        'inp-basah-high','inp-basah-low',
        'inp-kering-high','inp-kering-low',
-       'inp-block-high','inp-block-low',
+       'inp-block-1kg-high','inp-block-1kg-low',
+       'inp-block-5kg-high','inp-block-5kg-low',
        'inp-notes-prod'].forEach(function(id){
         var el = $(id); if(el) el.value = '';
       });
+      updateBmTotal();
       setOutcome('berhasil');
       resetCarryIn();
       calcSusut();
@@ -1262,13 +1305,19 @@ tbody tr:hover td{background:var(--cream);}
     var susut = totalDijemur > 0 && tKg <= totalDijemur
       ? ((totalDijemur - tKg) / totalDijemur * 100).toFixed(1) + '%'
       : '—';
-    var pctBlock  = tBl > 0 ? Math.min(Math.round(tBl/TARGET_BLOCK*100),  999) : 0;
+    // Block varian aggregate
+    var tBlk1kgH = tot('block1kgHigh'), tBlk1kgL = tot('block1kgLow');
+    var tBlk5kgH = tot('block5kgHigh'), tBlk5kgL = tot('block5kgLow');
+    var tBlk1kg = tBlk1kgH + tBlk1kgL;
+    var tBlk5kg = tBlk5kgH + tBlk5kgL;
+    var pct1kg = tBlk1kg > 0 ? Math.min(Math.round(tBlk1kg / TARGET_BLOCK_1KG * 100), 999) : 0;
+    var pct5kg = tBlk5kg > 0 ? Math.min(Math.round(tBlk5kg / TARGET_BLOCK_5KG * 100), 999) : 0;
     var pctKering = tKg > 0 ? Math.min(Math.round(tKg/TARGET_KERING*100), 999) : 0;
     var sisaKering = Math.max(TARGET_KERING - tKg, 0).toFixed(1);
 
     $('r-block').innerHTML = tBl + '<sup>pcs</sup>';
     $('r-sub').textContent = entries.length
-      ? pctBlock + '% dari target 60 pcs · ' + entries.length + ' shift masuk'
+      ? tBlk1kg + ' pcs 1kg · ' + tBlk5kg + ' pcs 5kg · ' + entries.length + ' shift masuk'
       : 'Belum ada data hari ini';
 
     // EC cards
@@ -1281,14 +1330,28 @@ tbody tr:hover td{background:var(--cream);}
     $('r-block-high').textContent  = tBlh;
     $('r-block-low').textContent   = tBlw;
 
-    $('r-pct').textContent        = pctBlock + '%';
+    // Progress 1kg
+    $('r-pct-1kg').textContent = pct1kg + '%';
+    $('r-1kg-sisa').textContent = tBlk1kg < TARGET_BLOCK_1KG
+      ? 'Sisa: ' + (TARGET_BLOCK_1KG - tBlk1kg) + ' pcs'
+      : 'Target tercapai ✓';
+    var bar1 = $('r-bar-1kg');
+    bar1.style.width = Math.min(pct1kg, 100) + '%';
+    bar1.className = 'prog-fill' + (pct1kg < 70 ? ' warn' : '');
+
+    // Progress 5kg
+    $('r-pct-5kg').textContent = pct5kg + '%';
+    $('r-5kg-sisa').textContent = tBlk5kg < TARGET_BLOCK_5KG
+      ? 'Sisa: ' + (TARGET_BLOCK_5KG - tBlk5kg) + ' pcs'
+      : 'Target tercapai ✓';
+    var bar5 = $('r-bar-5kg');
+    bar5.style.width = Math.min(pct5kg, 100) + '%';
+    bar5.className = 'prog-fill' + (pct5kg < 70 ? ' warn' : '');
+
+    // Susut + Kering
     $('r-susut').textContent      = susut;
     $('r-kering-pct').textContent = pctKering + '%';
     $('r-kering-sisa').textContent = tKg < TARGET_KERING ? 'Sisa: ' + sisaKering + ' kg' : 'Target tercapai ✓';
-
-    var bar  = $('r-bar');
-    bar.style.width = Math.min(pctBlock, 100) + '%';
-    bar.className = 'prog-fill' + (pctBlock < 70 ? ' warn' : '');
     var barK = $('r-kering-bar');
     barK.style.width = Math.min(pctKering, 100) + '%';
     barK.className = 'prog-fill' + (pctKering < 70 ? ' warn' : '');
@@ -1339,8 +1402,12 @@ tbody tr:hover td{background:var(--cream);}
       tBh: tBh, tBll: tBll,
       tKgh: tKgh, tKgl: tKgl,
       tBlh: tBlh, tBlw: tBlw,
+      tBlk1kg: tBlk1kg, tBlk5kg: tBlk5kg,
+      tBlk1kgH: tBlk1kgH, tBlk1kgL: tBlk1kgL,
+      tBlk5kgH: tBlk5kgH, tBlk5kgL: tBlk5kgL,
+      pct1kg: pct1kg, pct5kg: pct5kg,
       tCh: tCh, tCl: tCl, tCarry: tCarry, totalDijemur: totalDijemur,
-      susut: susut, pctBlock: pctBlock
+      susut: susut
     };
   }
 
@@ -1415,8 +1482,13 @@ tbody tr:hover td{background:var(--cream);}
       var hasLow  = (e.karungLow  + e.basahLow  + e.keringLow  + e.blockLow)  > 0;
       var head = '  [' + String(e.shift).toUpperCase() + '] ' + e.operator;
       var body = '';
-      if(hasHigh) body += '\n     🟢 H: ' + e.karungHigh + ' krg | ' + e.basahHigh + ' kg basah | ' + e.keringHigh + ' kg kering | ' + e.blockHigh + ' pcs';
-      if(hasLow)  body += '\n     🟡 L: ' + e.karungLow  + ' krg | ' + e.basahLow  + ' kg basah | ' + e.keringLow  + ' kg kering | ' + e.blockLow  + ' pcs';
+      function blockBreak(h1, h5){
+        var has = (h1||0) + (h5||0);
+        if(has === 0) return '';
+        return ' [1kg:' + (h1||0) + ' / 5kg:' + (h5||0) + ']';
+      }
+      if(hasHigh) body += '\n     🟢 H: ' + e.karungHigh + ' krg | ' + e.basahHigh + ' kg basah | ' + e.keringHigh + ' kg kering | ' + e.blockHigh + ' pcs' + blockBreak(e.block1kgHigh, e.block5kgHigh);
+      if(hasLow)  body += '\n     🟡 L: ' + e.karungLow  + ' krg | ' + e.basahLow  + ' kg basah | ' + e.keringLow  + ' kg kering | ' + e.blockLow  + ' pcs' + blockBreak(e.block1kgLow, e.block5kgLow);
       if(!body) body = '\n     ' + e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + e.block + ' pcs';
       return head + body + (e.notes ? '\n     📌 ' + e.notes : '');
     }).join('\n\n');
@@ -1437,16 +1509,19 @@ tbody tr:hover td{background:var(--cream);}
 
     var msg = '📊 *LAPORAN PRODUKSI — VSK*\n━━━━━━━━━━━━━━━━━\n📅 ' + d + '\n\n' +
       '🟢 *HIGH EC*\n' +
-      '   📦 ' + c.tKh  + ' krg · 💧 ' + c.tBh.toFixed(1)  + ' kg basah · ☀️ ' + c.tKgh.toFixed(1) + ' kg kering · 🧱 ' + c.tBlh + ' pcs\n\n' +
+      '   📦 ' + c.tKh  + ' krg · 💧 ' + c.tBh.toFixed(1)  + ' kg basah · ☀️ ' + c.tKgh.toFixed(1) + ' kg kering\n' +
+      '   🧱 Block: ' + c.tBlk1kgH + ' pcs (1kg) · ' + c.tBlk5kgH + ' pcs (5kg)\n\n' +
       '🟡 *LOW EC*\n' +
-      '   📦 ' + c.tKl  + ' krg · 💧 ' + c.tBll.toFixed(1) + ' kg basah · ☀️ ' + c.tKgl.toFixed(1) + ' kg kering · 🧱 ' + c.tBlw + ' pcs\n\n' +
+      '   📦 ' + c.tKl  + ' krg · 💧 ' + c.tBll.toFixed(1) + ' kg basah · ☀️ ' + c.tKgl.toFixed(1) + ' kg kering\n' +
+      '   🧱 Block: ' + c.tBlk1kgL + ' pcs (1kg) · ' + c.tBlk5kgL + ' pcs (5kg)\n\n' +
       carrySection +
       '🧮 *TOTAL*\n' +
-      '   🧱 Block   : *' + c.tBl + ' pcs* (' + c.pctBlock + '% dari target)\n' +
-      '   📦 Karung  : ' + c.tK + ' krg\n' +
+      '   🧱 Block 1kg : *' + c.tBlk1kg + ' pcs* (' + c.pct1kg + '% dari target 100 pcs)\n' +
+      '   🧱 Block 5kg : *' + c.tBlk5kg + ' pcs* (' + c.pct5kg + '% dari target 10 pcs)\n' +
+      '   📦 Karung   : ' + c.tK + ' krg\n' +
       totalDijemurLine +
-      '   ☀️ Kering  : ' + c.tKg + ' kg\n' +
-      '   📉 Susut   : ' + c.susut + '\n\n' +
+      '   ☀️ Kering   : ' + c.tKg + ' kg (target 150 kg)\n' +
+      '   📉 Susut    : ' + c.susut + '\n\n' +
       '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n' +
       '_*Confidential VSK Production System Report. It is prohibited to disseminate this information unless written approval is obtained from VSK management.*_\n' +
       '_*©All Right Reserved PT Varian Sumber Karya®*_';
@@ -1497,6 +1572,11 @@ tbody tr:hover td{background:var(--cream);}
     ['inp-basah-high','inp-basah-low','inp-kering-high','inp-kering-low',
      'inp-carryin-high','inp-carryin-low'].forEach(function(id){
       var el = $(id); if(el) el.addEventListener('input', calcSusut);
+    });
+
+    // Block matrix — live total
+    ['inp-block-1kg-high','inp-block-1kg-low','inp-block-5kg-high','inp-block-5kg-low'].forEach(function(id){
+      var el = $(id); if(el) el.addEventListener('input', updateBmTotal);
     });
 
     // Outcome buttons

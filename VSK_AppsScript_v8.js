@@ -38,7 +38,8 @@ const HEADERS_PRODUKSI = [
   'Kering (kg)', 'Kering High EC (kg)', 'Kering Low EC (kg)',
   'Block (pcs)', 'Block High EC', 'Block Low EC',
   'Susut (%)', 'Catatan', 'Input Time',
-  'Outcome', 'Carry-In High EC (kg)', 'Carry-In Low EC (kg)'
+  'Outcome', 'Carry-In High EC (kg)', 'Carry-In Low EC (kg)',
+  'Block 1kg High EC', 'Block 1kg Low EC', 'Block 5kg High EC', 'Block 5kg Low EC'
 ];
 
 // Indeks kolom 0-based untuk kemudahan referensi
@@ -49,7 +50,8 @@ const PROD_COL = {
   KERING: 10, KERING_H: 11, KERING_L: 12,
   BLOCK: 13, BLOCK_H: 14, BLOCK_L: 15,
   SUSUT: 16, NOTES: 17, TIME: 18,
-  OUTCOME: 19, CARRYIN_H: 20, CARRYIN_L: 21
+  OUTCOME: 19, CARRYIN_H: 20, CARRYIN_L: 21,
+  BLOCK_1KG_H: 22, BLOCK_1KG_L: 23, BLOCK_5KG_H: 24, BLOCK_5KG_L: 25
 };
 
 const HEADERS_RAW_KEDATANGAN = [
@@ -188,14 +190,57 @@ function cekStatus() {
 function migrateToV8() {
   const result = {
     ok: true,
-    schemaVersion: 'v8',
+    schemaVersion: 'v8.2',
     produksi: migrateProduksiToV8(),
-    rawmat: migrateRawmatToV8()
+    rawmat: migrateRawmatToV8(),
+    carryOver: migrateCarryOver(),
+    blockVariants: migrateBlockVariants()
   };
-  console.log('=== VSK MIGRATION v8 ===');
+  console.log('=== VSK MIGRATION v8.2 ===');
   console.log(JSON.stringify(result, null, 2));
-  // Throw with result supaya output PASTI tampil di execution panel
   throw new Error('MIGRATION RESULT (bukan error sungguhan, ini cara supaya hasilnya kelihatan):\n\n' + JSON.stringify(result, null, 2));
+}
+
+/**
+ * v8.2 — Tambah 4 kolom: Block 1kg High EC, Block 1kg Low EC,
+ * Block 5kg High EC, Block 5kg Low EC. Append di akhir. Idempotent.
+ * Backfill: data legacy → semua varian = 0. Kolom Block High/Low EC lama
+ * tetap utuh sebagai legacy total (frontend handle backward-compat).
+ */
+function migrateBlockVariants() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_PRODUKSI);
+  if (!sheet) return { skipped: true, reason: 'Sheet Produksi tidak ada' };
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(String);
+
+  if (headers.indexOf('Block 1kg High EC') !== -1 && headers.indexOf('Block 5kg Low EC') !== -1) {
+    return { alreadyMigrated: true, message: 'Block varian kolom sudah ada' };
+  }
+
+  const newCols = ['Block 1kg High EC', 'Block 1kg Low EC', 'Block 5kg High EC', 'Block 5kg Low EC'];
+  const startCol = lastCol + 1;
+  newCols.forEach(function(name, i){
+    sheet.getRange(1, startCol + i).setValue(name);
+  });
+  sheet.getRange(1, startCol, 1, 4)
+    .setFontWeight('bold').setBackground('#048419').setFontColor('#ffffff');
+
+  // Backfill row legacy: semua varian = 0
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const dataCount = lastRow - 1;
+    const fillData = [];
+    for (let i = 0; i < dataCount; i++) fillData.push([0, 0, 0, 0]);
+    sheet.getRange(2, startCol, dataCount, 4).setValues(fillData);
+  }
+
+  return {
+    migrated: true,
+    rowsAffected: lastRow - 1,
+    columnsAdded: newCols,
+    message: 'Schema v8.2 — Block varian (1kg/5kg) siap pakai'
+  };
 }
 
 function migrateProduksiToV8() {
@@ -370,7 +415,26 @@ function produksiSaveShift(data) {
   const krg = splitField('karungHigh', 'karungLow', 'karung');
   const bas = splitField('basahHigh',  'basahLow',  'basah');
   const ker = splitField('keringHigh', 'keringLow', 'kering');
-  const blk = splitField('blockHigh',  'blockLow',  'block');
+
+  // v8.2 — Block per varian (1kg, 5kg) × per EC (high, low)
+  const block1kgH = parseNum(data.block1kgHigh);
+  const block1kgL = parseNum(data.block1kgLow);
+  const block5kgH = parseNum(data.block5kgHigh);
+  const block5kgL = parseNum(data.block5kgLow);
+  const variantTotal = block1kgH + block1kgL + block5kgH + block5kgL;
+
+  // Backward-compat: kalau frontend lama kirim blockHigh/blockLow tanpa varian,
+  // tetap accept. Total Block = sum 4 varian. Per EC = sum varian dalam EC tsb.
+  let blk;
+  if (variantTotal > 0) {
+    blk = {
+      high:  block1kgH + block5kgH,
+      low:   block1kgL + block5kgL,
+      total: variantTotal
+    };
+  } else {
+    blk = splitField('blockHigh', 'blockLow', 'block');
+  }
 
   const validOutcomes = ['berhasil', 'parsial', 'gagal'];
   const outcome = validOutcomes.indexOf(String(data.outcome || '').toLowerCase()) !== -1
@@ -395,7 +459,8 @@ function produksiSaveShift(data) {
     ker.total, ker.high, ker.low,
     blk.total, blk.high, blk.low,
     susut, data.notes || '', data.time,
-    outcome, carryInH, carryInL
+    outcome, carryInH, carryInL,
+    block1kgH, block1kgL, block5kgH, block5kgL
   ]);
 
   return {
@@ -406,7 +471,9 @@ function produksiSaveShift(data) {
     karungTotal: krg.total, karungHigh: krg.high, karungLow: krg.low,
     basahTotal:  bas.total, basahHigh:  bas.high, basahLow:  bas.low,
     keringTotal: ker.total, keringHigh: ker.high, keringLow: ker.low,
-    blockTotal:  blk.total, blockHigh:  blk.high, blockLow:  blk.low
+    blockTotal:  blk.total, blockHigh:  blk.high, blockLow:  blk.low,
+    block1kgHigh: block1kgH, block1kgLow: block1kgL,
+    block5kgHigh: block5kgH, block5kgLow: block5kgL
   };
 }
 
@@ -431,10 +498,14 @@ function getRekapByDate(date) {
       block:     parseNum(row[PROD_COL.BLOCK]),
       blockHigh: parseNum(row[PROD_COL.BLOCK_H]),
       blockLow:  parseNum(row[PROD_COL.BLOCK_L]),
+      block1kgHigh: parseNum(row[PROD_COL.BLOCK_1KG_H]),
+      block1kgLow:  parseNum(row[PROD_COL.BLOCK_1KG_L]),
+      block5kgHigh: parseNum(row[PROD_COL.BLOCK_5KG_H]),
+      block5kgLow:  parseNum(row[PROD_COL.BLOCK_5KG_L]),
       susut: row[PROD_COL.SUSUT] ? String(row[PROD_COL.SUSUT]) : '',
       notes: row[PROD_COL.NOTES] || '',
       time:  row[PROD_COL.TIME]  || '',
-      outcome:     row[PROD_COL.OUTCOME]   || 'berhasil',
+      outcome:     String(row[PROD_COL.OUTCOME] || 'berhasil').toLowerCase(),
       carryInHigh: parseNum(row[PROD_COL.CARRYIN_H]),
       carryInLow:  parseNum(row[PROD_COL.CARRYIN_L])
     });
@@ -457,6 +528,7 @@ function getRiwayat() {
         basah: 0,  basahHigh: 0,  basahLow: 0,
         kering: 0, keringHigh: 0, keringLow: 0,
         block: 0,  blockHigh: 0,  blockLow: 0,
+        block1kgHigh: 0, block1kgLow: 0, block5kgHigh: 0, block5kgLow: 0,
         carryInHigh: 0, carryInLow: 0,
         outcomes: [],
         shifts: []
@@ -477,6 +549,10 @@ function getRiwayat() {
     b.blockLow   += parseNum(row[PROD_COL.BLOCK_L]);
     b.carryInHigh += parseNum(row[PROD_COL.CARRYIN_H]);
     b.carryInLow  += parseNum(row[PROD_COL.CARRYIN_L]);
+    b.block1kgHigh += parseNum(row[PROD_COL.BLOCK_1KG_H]);
+    b.block1kgLow  += parseNum(row[PROD_COL.BLOCK_1KG_L]);
+    b.block5kgHigh += parseNum(row[PROD_COL.BLOCK_5KG_H]);
+    b.block5kgLow  += parseNum(row[PROD_COL.BLOCK_5KG_L]);
     const rowOutcome = row[PROD_COL.OUTCOME] || 'berhasil';
     if (b.outcomes.indexOf(rowOutcome) === -1) b.outcomes.push(rowOutcome);
     if (b.shifts.indexOf(row[PROD_COL.SHIFT]) === -1) b.shifts.push(row[PROD_COL.SHIFT]);
