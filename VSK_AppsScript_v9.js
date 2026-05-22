@@ -1,34 +1,47 @@
 /**
- * VSK — Google Apps Script Backend v8
+ * VSK — Google Apps Script Backend v9
  *
- * UPDATE dari v7:
- * - SCHEMA EC SPLIT: semua field produksi sekarang punya breakdown per EC type
- *   (High EC / Low EC). Karung, Basah, Kering ditambah High/Low. Block sudah
- *   ada dari v7.
- * - SCHEMA RAWMAT: tambah kolom "EC Type" di tab Rawmat_Kedatangan, di-set
- *   per batch (1 truk = 1 jenis cocopeat).
- * - STOCK: getRawmatStock() return saldo per EC + total. Frontend tampil
- *   2 sub-card side-by-side.
- * - LEGACY DATA: semua row pra-v8 ditag sebagai LOW EC (sesuai konfirmasi
- *   Tony bahwa rawmat dan produksi sebelum migrasi adalah Low EC).
+ * UPDATE dari v8:
+ * - MODUL PENJUALAN: tambah tab baru `Output_Penjualan` (23 kolom).
+ *   Mencatat keluar gudang — Kering (kg), Block 1kg (pcs), Block 5kg (pcs),
+ *   per EC type (High / Low), lengkap dengan buyer, PO, DO, harga, dan status.
+ * - STOCK FINISHED GOODS: getPenjualanStock() hitung saldo real-time per
+ *   produk per EC type (total produksi minus total terjual).
+ * - VALIDASI STOK SERVER-SIDE: penjualanSave() tolak transaksi jika stok
+ *   tidak cukup, sebelum data ditulis ke sheet.
+ * - CANCEL / VOID: penjualanCancel() batalkan transaksi + stok otomatis
+ *   kembali (baris 'cancelled' tidak dihitung di saldo).
+ * - Transaction ID format: TRX-YYYYMMDD-NNN (idempotent, per-tanggal).
+ * - Rekap bulanan: getPenjualanRekap() untuk laporan per bulan.
  *
  * INSTALL DI 2 SPREADSHEET (staging + production):
  *   1. Buka spreadsheet → Extensions → Apps Script
- *   2. Replace seluruh kode v7 dengan isi file ini
+ *   2. Replace seluruh kode v8 dengan isi file ini
  *   3. Save (Ctrl+S)
- *   4. PENTING: Pilih function `migrateToV8` di dropdown, klik Run.
+ *   4. PENTING: Pilih function `migratePenjualan` di dropdown, klik Run.
+ *      Ini akan membuat tab Output_Penjualan secara otomatis (idempotent).
  *      Authorize kalau diminta. Lihat View → Logs untuk konfirmasi.
  *   5. Deploy → Manage Deployments → Edit → New Version → Deploy
  *
  * URUTAN MIGRASI YANG AMAN:
  *   - STAGING dulu — migrate, deploy frontend, test
  *   - Setelah confirm, baru migrasi PRODUCTION
+ *
+ * BACKWARD COMPATIBILITY:
+ *   - Semua endpoint v8 tetap berfungsi tanpa perubahan.
+ *   - Tab Produksi, Rawmat_Kedatangan, Rawmat_Karung tidak disentuh.
  */
 
 const SHEET_PRODUKSI       = 'Produksi';
 const SHEET_RAW_KEDATANGAN = 'Rawmat_Kedatangan';
 const SHEET_RAW_KARUNG     = 'Rawmat_Karung';
 const SHEET_SUPPLIERS      = 'Suppliers';
+const SHEET_PENJUALAN      = 'Output_Penjualan';
+const DRIVE_FOLDER_FOTO_DO = '1g-Fw_N14WrV4mEBKUNv9nxeHwBU_r41c'; // OQ-6 answered
+
+// Batas sample shipment (harga = 0)
+const SAMPLE_MAX_BLOCK_PCS = 2;   // Max total Block pcs untuk sample shipment
+const SAMPLE_MAX_KERING_KG = 5;   // Max total Kering kg untuk sample shipment
 const TZ = 'Asia/Jakarta';
 
 const HEADERS_PRODUKSI = [
@@ -77,6 +90,54 @@ const HEADERS_SUPPLIERS = [
   'Timestamp Server', 'Nama', 'Kontak', 'Alamat', 'Harga/kg', 'Aktif', 'Catatan'
 ];
 
+// ── Schema: Output_Penjualan ───────────────────────────────
+const HEADERS_PENJUALAN = [
+  'Timestamp Server',       // 0  — auto, server time
+  'Transaction ID',         // 1  — TRX-YYYYMMDD-NNN
+  'Tanggal',                // 2  — yyyy-MM-dd
+  'Buyer',                  // 3  — nama buyer / customer
+  'Nomor Invoice',          // 4  — Invoice number
+  'Nomor DO',               // 5  — Delivery Order / Surat Jalan
+  'Kering High EC (kg)',    // 6
+  'Kering Low EC (kg)',     // 7
+  'Block 1kg High EC',      // 8  — pcs
+  'Block 1kg Low EC',       // 9  — pcs
+  'Block 5kg High EC',      // 10 — pcs
+  'Block 5kg Low EC',       // 11 — pcs
+  'Harga Kering High/kg',   // 12 — IDR (High EC)
+  'Harga Kering Low/kg',    // 13 — IDR (Low EC)
+  'Harga Block 1kg High',   // 14 — IDR (High EC)
+  'Harga Block 1kg Low',    // 15 — IDR (Low EC)
+  'Harga Block 5kg High',   // 16 — IDR (High EC)
+  'Harga Block 5kg Low',    // 17 — IDR (Low EC)
+  'Total Nilai (IDR)',      // 18 — auto-computed
+  'Status',                 // 19 — 'submitted' | 'cancelled'
+  'Cancel Reason',          // 20 — kosong jika submitted
+  'Foto DO URL',            // 21 — Google Drive link (opsional)
+  'Operator',               // 22
+  'Catatan',                // 23
+  'Input Time',             // 24 — client-side timestamp
+  'Cancel Time',            // 25
+  'Cancel By',              // 26
+  'Jenis',                  // 27 — 'penjualan' | 'sample' | 'retur'
+  'TRX Referensi'           // 28 — TRX-ID asal (untuk retur), kosong untuk penjualan/sample
+];
+
+const JUAL_COL = {
+  TS: 0, TRX_ID: 1, TANGGAL: 2, BUYER: 3, PO: 4, DO: 5,
+  KERING_H: 6, KERING_L: 7,
+  B1KG_H: 8, B1KG_L: 9,
+  B5KG_H: 10, B5KG_L: 11,
+  HARGA_KERING_H: 12, HARGA_KERING_L: 13,
+  HARGA_B1_H: 14, HARGA_B1_L: 15,
+  HARGA_B5_H: 16, HARGA_B5_L: 17,
+  TOTAL_NILAI: 18,
+  STATUS: 19, CANCEL_REASON: 20, FOTO_DO: 21,
+  OPERATOR: 22, NOTES: 23, INPUT_TIME: 24,
+  CANCEL_TIME: 25, CANCEL_BY: 26,
+  JENIS: 27, TRX_REF: 28
+};
+
 const MONTHS = {
   Jan: '01', Feb: '02', Mar: '03', Apr: '04',
   May: '05', Jun: '06', Jul: '07', Aug: '08',
@@ -97,13 +158,17 @@ function doGet(e) {
   if (action === 'rawmat-active')  return jsonOut(getRawmatActive());
   if (action === 'rawmat-debug')   return jsonOut(getRawmatDebug());
 
+  if (action === 'penjualan-stock')  return jsonOut(getPenjualanStock());
+  if (action === 'penjualan-riwayat') return jsonOut(getPenjualanRiwayat());
+  if (action === 'penjualan-rekap')  return jsonOut(getPenjualanRekap(e.parameter.bulan));
+
   return jsonOut({
     ok: true,
-    service: 'VSK Backend v8',
-    schemaVersion: 'v8',
+    service: 'VSK Backend v9',
+    schemaVersion: 'v9',
     serverToday: todayDate(),
     time: new Date().toISOString(),
-    modules: ['produksi', 'rawmat']
+    modules: ['produksi', 'rawmat', 'penjualan']
   });
 }
 
@@ -118,6 +183,10 @@ function doPost(e) {
     if (type === 'rawmat-flag')    return jsonOut(rawmatFlagKarung(data));
     if (type === 'rawmat-close')   return jsonOut(rawmatCloseBatch(data));
     if (type === 'rawmat-cancel')  return jsonOut(rawmatCancelBatch(data));
+
+    if (type === 'penjualan-save')   return jsonOut(penjualanSave(data));
+    if (type === 'penjualan-cancel') return jsonOut(penjualanCancel(data));
+    if (type === 'penjualan-retur')  return jsonOut(penjualanRetur(data));
 
     return jsonOut(produksiSaveShift(data));
   } catch (err) {
@@ -168,7 +237,7 @@ function cekStatus() {
     report += '\n\n[Rawmat_Kedatangan] sheet tidak ditemukan';
   }
 
-  report += '\n\nScript version: v8';
+  report += '\n\nScript version: v9';
   report += '\n=== END STATUS ===\n';
 
   // Throw supaya pesannya pasti tampil di execution log
@@ -586,7 +655,7 @@ function getDebugInfo() {
     });
   }
   return {
-    ok: true, schemaVersion: 'v8',
+    ok: true, schemaVersion: 'v9',
     serverToday: todayDate(), timezone: TZ,
     totalRows: rows.length - 1,
     sampleLast5: sample
@@ -857,7 +926,7 @@ function getRawmatDebug() {
   const karungSheet = getOrCreateSheet(SHEET_RAW_KARUNG, HEADERS_RAW_KARUNG);
   return {
     ok: true,
-    schemaVersion: 'v8',
+    schemaVersion: 'v9',
     serverToday: todayDate(),
     timezone: TZ,
     totalBatches: headerSheet.getLastRow() - 1,
@@ -1008,3 +1077,482 @@ function jsonOut(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// ═══════════════════════════════════════════════════════════
+// MODUL PENJUALAN — Finished Goods Output
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Hitung saldo finished goods per produk per EC type.
+ * Formula: total diproduksi − total terjual (status='submitted')
+ */
+function getPenjualanStock() {
+  const prodSheet = getOrCreateSheet(SHEET_PRODUKSI, HEADERS_PRODUKSI);
+  const prod = prodSheet.getDataRange().getValues();
+
+  // Akumulasi dari produksi
+  let prodKeringH = 0, prodKeringL = 0;
+  let prodB1H = 0, prodB1L = 0;
+  let prodB5H = 0, prodB5L = 0;
+
+  for (let i = 1; i < prod.length; i++) {
+    prodKeringH += parseNum(prod[i][PROD_COL.KERING_H]);
+    prodKeringL += parseNum(prod[i][PROD_COL.KERING_L]);
+    prodB1H     += parseNum(prod[i][PROD_COL.BLOCK_1KG_H]);
+    prodB1L     += parseNum(prod[i][PROD_COL.BLOCK_1KG_L]);
+    prodB5H     += parseNum(prod[i][PROD_COL.BLOCK_5KG_H]);
+    prodB5L     += parseNum(prod[i][PROD_COL.BLOCK_5KG_L]);
+  }
+
+  // Akumulasi penjualan (hanya status='submitted')
+  const jualSheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const jual = jualSheet.getDataRange().getValues();
+
+  let soldKeringH = 0, soldKeringL = 0;
+  let soldB1H = 0, soldB1L = 0;
+  let soldB5H = 0, soldB5L = 0;
+
+  for (let i = 1; i < jual.length; i++) {
+    if (String(jual[i][JUAL_COL.STATUS]) !== 'submitted') continue;
+    // retur = barang kembali → mult=-1 (menambah saldo), penjualan/sample = mult=+1 (mengurangi saldo)
+    const jenis = jual[i][JUAL_COL.JENIS] || 'penjualan';
+    const mult  = (jenis === 'retur') ? -1 : 1;
+    soldKeringH += mult * parseNum(jual[i][JUAL_COL.KERING_H]);
+    soldKeringL += mult * parseNum(jual[i][JUAL_COL.KERING_L]);
+    soldB1H     += mult * parseNum(jual[i][JUAL_COL.B1KG_H]);
+    soldB1L     += mult * parseNum(jual[i][JUAL_COL.B1KG_L]);
+    soldB5H     += mult * parseNum(jual[i][JUAL_COL.B5KG_H]);
+    soldB5L     += mult * parseNum(jual[i][JUAL_COL.B5KG_L]);
+  }
+
+  return {
+    ok: true,
+    saldo: {
+      keringHighKg:  +(prodKeringH - soldKeringH).toFixed(2),
+      keringLowKg:   +(prodKeringL - soldKeringL).toFixed(2),
+      block1kgHigh:  prodB1H - soldB1H,
+      block1kgLow:   prodB1L - soldB1L,
+      block5kgHigh:  prodB5H - soldB5H,
+      block5kgLow:   prodB5L - soldB5L
+    },
+    produksi: {
+      keringHighKg: +prodKeringH.toFixed(2),
+      keringLowKg:  +prodKeringL.toFixed(2),
+      block1kgHigh: prodB1H, block1kgLow: prodB1L,
+      block5kgHigh: prodB5H, block5kgLow: prodB5L
+    },
+    terjual: {
+      keringHighKg: +soldKeringH.toFixed(2),
+      keringLowKg:  +soldKeringL.toFixed(2),
+      block1kgHigh: soldB1H, block1kgLow: soldB1L,
+      block5kgHigh: soldB5H, block5kgLow: soldB5L
+    }
+  };
+}
+
+/**
+ * Simpan transaksi penjualan baru.
+ * Validasi stok di server — tolak jika tidak cukup.
+ *
+ * Payload: {
+ *   tanggal, buyer, nomorPO, nomorDO,
+ *   keringHighKg, keringLowKg,
+ *   block1kgHigh, block1kgLow,
+ *   block5kgHigh, block5kgLow,
+ *   hargaKering, hargaBlock1kg, hargaBlock5kg,
+ *   fotoDOUrl, operator, catatan, inputTime
+ * }
+ */
+function penjualanSave(data) {
+  // Validasi input wajib
+  if (!data.tanggal)        return { ok: false, error: 'Tanggal wajib diisi' };
+  if (!data.buyer)          return { ok: false, error: 'Buyer wajib diisi' };
+  if (!data.nomorInvoice)   return { ok: false, error: 'Nomor Invoice wajib diisi' };
+  if (!data.nomorDO)        return { ok: false, error: 'Nomor DO wajib diisi' };
+
+  const keringH = parseNum(data.keringHighKg);
+  const keringL = parseNum(data.keringLowKg);
+  const b1H     = parseNum(data.block1kgHigh);
+  const b1L     = parseNum(data.block1kgLow);
+  const b5H     = parseNum(data.block5kgHigh);
+  const b5L     = parseNum(data.block5kgLow);
+  const total   = keringH + keringL + b1H + b1L + b5H + b5L;
+
+  if (total <= 0) return { ok: false, error: 'Minimal 1 produk dengan qty > 0' };
+
+  // Deteksi sample shipment: semua harga = 0
+  const hargaKeringH = parseNum(data.hargaKeringHigh);
+  const hargaKeringL = parseNum(data.hargaKeringLow);
+  const hargaB1H     = parseNum(data.hargaBlock1kgHigh);
+  const hargaB1L     = parseNum(data.hargaBlock1kgLow);
+  const hargaB5H     = parseNum(data.hargaBlock5kgHigh);
+  const hargaB5L     = parseNum(data.hargaBlock5kgLow);
+  const isSample     = (hargaKeringH === 0 && hargaKeringL === 0 &&
+                        hargaB1H === 0 && hargaB1L === 0 &&
+                        hargaB5H === 0 && hargaB5L === 0);
+  const jenis        = isSample ? 'sample' : 'penjualan';
+
+  // Validasi sample: max qty dibatasi
+  if (isSample) {
+    const totalBlockPcs = b1H + b1L + b5H + b5L;
+    const totalKeringKg = keringH + keringL;
+    if (totalBlockPcs > SAMPLE_MAX_BLOCK_PCS) {
+      return { ok: false, error: 'Sample shipment max ' + SAMPLE_MAX_BLOCK_PCS + ' pcs Block total. Diminta: ' + totalBlockPcs + ' pcs' };
+    }
+    if (totalKeringKg > SAMPLE_MAX_KERING_KG) {
+      return { ok: false, error: 'Sample shipment max ' + SAMPLE_MAX_KERING_KG + ' kg Kering. Diminta: ' + totalKeringKg + ' kg' };
+    }
+  }
+
+  // Validasi stok tersedia
+  const stok = getPenjualanStock();
+  const s = stok.saldo;
+  if (keringH > s.keringHighKg)  return { ok: false, error: 'Stok Kering High EC tidak cukup. Tersedia: ' + s.keringHighKg + ' kg, diminta: ' + keringH + ' kg' };
+  if (keringL > s.keringLowKg)   return { ok: false, error: 'Stok Kering Low EC tidak cukup. Tersedia: ' + s.keringLowKg + ' kg, diminta: ' + keringL + ' kg' };
+  if (b1H > s.block1kgHigh)      return { ok: false, error: 'Stok Block 1kg High EC tidak cukup. Tersedia: ' + s.block1kgHigh + ' pcs, diminta: ' + b1H };
+  if (b1L > s.block1kgLow)       return { ok: false, error: 'Stok Block 1kg Low EC tidak cukup. Tersedia: ' + s.block1kgLow + ' pcs, diminta: ' + b1L };
+  if (b5H > s.block5kgHigh)      return { ok: false, error: 'Stok Block 5kg High EC tidak cukup. Tersedia: ' + s.block5kgHigh + ' pcs, diminta: ' + b5H };
+  if (b5L > s.block5kgLow)       return { ok: false, error: 'Stok Block 5kg Low EC tidak cukup. Tersedia: ' + s.block5kgLow + ' pcs, diminta: ' + b5L };
+
+  // Generate Transaction ID
+  const sheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const trxId = generateTrxId(sheet, data.tanggal);
+  const now = new Date();
+
+  // Hitung total nilai (per EC type)
+  const totalNilai  = keringH * hargaKeringH + keringL * hargaKeringL
+                    + b1H * hargaB1H + b1L * hargaB1L
+                    + b5H * hargaB5H + b5L * hargaB5L;
+
+  const row = [
+    now,                         // 0  Timestamp Server
+    trxId,                       // 1  Transaction ID
+    data.tanggal,                // 2  Tanggal
+    data.buyer,                  // 3  Buyer
+    data.nomorInvoice,           // 4  Nomor Invoice
+    data.nomorDO,                // 5  Nomor DO
+    keringH,                     // 6  Kering High EC (kg)
+    keringL,                     // 7  Kering Low EC (kg)
+    b1H,                         // 8  Block 1kg High EC
+    b1L,                         // 9  Block 1kg Low EC
+    b5H,                         // 10 Block 5kg High EC
+    b5L,                         // 11 Block 5kg Low EC
+    hargaKeringH,                // 12 Harga Kering High/kg
+    hargaKeringL,                // 13 Harga Kering Low/kg
+    hargaB1H,                    // 14 Harga Block 1kg High
+    hargaB1L,                    // 15 Harga Block 1kg Low
+    hargaB5H,                    // 16 Harga Block 5kg High
+    hargaB5L,                    // 17 Harga Block 5kg Low
+    +totalNilai.toFixed(0),      // 18 Total Nilai
+    'submitted',                 // 19 Status
+    '',                          // 20 Cancel Reason
+    data.fotoDOUrl || '',        // 21 Foto DO URL
+    data.operator  || '',        // 22 Operator
+    data.catatan   || '',        // 23 Catatan
+    data.inputTime || '',        // 24 Input Time
+    '',                          // 25 Cancel Time
+    '',                          // 26 Cancel By
+    jenis,                       // 27 Jenis: 'penjualan' | 'sample'
+    ''                           // 28 TRX Referensi (kosong untuk penjualan/sample)
+  ];
+
+  sheet.appendRow(row);
+
+  return {
+    ok: true,
+    trxId: trxId,
+    jenis: jenis,
+    totalNilai: +totalNilai.toFixed(0),
+    saldoBaru: getPenjualanStock().saldo
+  };
+}
+
+/**
+ * Cancel / void transaksi penjualan.
+ * Stok otomatis kembali karena getPenjualanStock() hanya SUM baris 'submitted'.
+ *
+ * Payload: { trxId, cancelReason, cancelBy }
+ */
+function penjualanCancel(data) {
+  if (!data.trxId)       return { ok: false, error: 'trxId wajib diisi' };
+  if (!data.cancelReason) return { ok: false, error: 'Alasan cancel wajib diisi' };
+
+  const sheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const rows  = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][JUAL_COL.TRX_ID]) !== String(data.trxId)) continue;
+    if (String(rows[i][JUAL_COL.STATUS]) === 'cancelled') {
+      return { ok: false, error: 'Transaksi sudah di-cancel sebelumnya' };
+    }
+    const now = new Date();
+    sheet.getRange(i + 1, JUAL_COL.STATUS + 1).setValue('cancelled');
+    sheet.getRange(i + 1, JUAL_COL.CANCEL_REASON + 1).setValue(data.cancelReason);
+    sheet.getRange(i + 1, JUAL_COL.CANCEL_TIME + 1).setValue(now);
+    sheet.getRange(i + 1, JUAL_COL.CANCEL_BY + 1).setValue(data.cancelBy || '');
+    return { ok: true, trxId: data.trxId, saldoBaru: getPenjualanStock().saldo };
+  }
+
+  return { ok: false, error: 'Transaksi tidak ditemukan: ' + data.trxId };
+}
+
+/**
+ * Return semua riwayat penjualan, terbaru di atas (max 100 baris).
+ */
+function getPenjualanRiwayat() {
+  const sheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const rows  = sheet.getDataRange().getValues();
+  const list  = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    list.push({
+      trxId:       r[JUAL_COL.TRX_ID],
+      tanggal:     formatDate(r[JUAL_COL.TANGGAL]),
+      buyer:       r[JUAL_COL.BUYER]    || '',
+      nomorInvoice: r[JUAL_COL.PO]      || '',
+      nomorDO:     r[JUAL_COL.DO]       || '',
+      keringHighKg: parseNum(r[JUAL_COL.KERING_H]),
+      keringLowKg:  parseNum(r[JUAL_COL.KERING_L]),
+      block1kgHigh: parseNum(r[JUAL_COL.B1KG_H]),
+      block1kgLow:  parseNum(r[JUAL_COL.B1KG_L]),
+      block5kgHigh: parseNum(r[JUAL_COL.B5KG_H]),
+      block5kgLow:  parseNum(r[JUAL_COL.B5KG_L]),
+      totalNilai:  parseNum(r[JUAL_COL.TOTAL_NILAI]),
+      status:      r[JUAL_COL.STATUS]   || '',
+      cancelReason: r[JUAL_COL.CANCEL_REASON] || '',
+      fotoDOUrl:   r[JUAL_COL.FOTO_DO]  || '',
+      operator:    r[JUAL_COL.OPERATOR] || '',
+      catatan:     r[JUAL_COL.NOTES]    || '',
+      inputTime:   r[JUAL_COL.INPUT_TIME] || '',
+      jenis:       r[JUAL_COL.JENIS]    || 'penjualan',
+      trxRef:      r[JUAL_COL.TRX_REF]  || '',
+      ts:          r[JUAL_COL.TS] ? Utilities.formatDate(new Date(r[JUAL_COL.TS]), TZ, 'yyyy-MM-dd HH:mm') : ''
+    });
+  }
+
+  list.sort((a, b) => b.trxId.localeCompare(a.trxId));
+  return { ok: true, transaksi: list.slice(0, 100) };
+}
+
+/**
+ * Rekap bulanan penjualan.
+ * @param {string} bulan — format 'YYYY-MM'. Jika kosong, pakai bulan ini.
+ */
+function getPenjualanRekap(bulan) {
+  const targetBulan = bulan || todayDate().substring(0, 7);
+  const sheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const rows  = sheet.getDataRange().getValues();
+
+  let totalKeringH = 0, totalKeringL = 0;
+  let totalB1H = 0, totalB1L = 0;
+  let totalB5H = 0, totalB5L = 0;
+  let totalNilai = 0;
+  let countTrx = 0;
+  const buyerSet = {};
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (String(r[JUAL_COL.STATUS]) !== 'submitted') continue;
+    const tgl = formatDate(r[JUAL_COL.TANGGAL]);
+    if (!tgl.startsWith(targetBulan)) continue;
+
+    const jenis = r[JUAL_COL.JENIS] || 'penjualan';
+    const mult  = (jenis === 'retur') ? -1 : 1;
+
+    totalKeringH += mult * parseNum(r[JUAL_COL.KERING_H]);
+    totalKeringL += mult * parseNum(r[JUAL_COL.KERING_L]);
+    totalB1H     += mult * parseNum(r[JUAL_COL.B1KG_H]);
+    totalB1L     += mult * parseNum(r[JUAL_COL.B1KG_L]);
+    totalB5H     += mult * parseNum(r[JUAL_COL.B5KG_H]);
+    totalB5L     += mult * parseNum(r[JUAL_COL.B5KG_L]);
+    totalNilai   += mult * parseNum(r[JUAL_COL.TOTAL_NILAI]);
+
+    // Hitung transaksi penjualan saja (retur tidak masuk hitungan count)
+    if (jenis !== 'retur') {
+      countTrx++;
+      const buyer = r[JUAL_COL.BUYER] || '-';
+      buyerSet[buyer] = (buyerSet[buyer] || 0) + 1;
+    }
+  }
+
+  return {
+    ok: true,
+    bulan: targetBulan,
+    totalTransaksi: countTrx,
+    totalNilai: +totalNilai.toFixed(0),
+    volume: {
+      keringHighKg:  +totalKeringH.toFixed(2),
+      keringLowKg:   +totalKeringL.toFixed(2),
+      block1kgHigh:  totalB1H,
+      block1kgLow:   totalB1L,
+      block5kgHigh:  totalB5H,
+      block5kgLow:   totalB5L
+    },
+    buyerCount: Object.keys(buyerSet).length,
+    buyers: buyerSet
+  };
+}
+
+/**
+ * Catat retur barang dari buyer (partial return OK).
+ * Stok otomatis naik karena getPenjualanStock() memperhitungkan jenis='retur'.
+ *
+ * Payload: {
+ *   trxRef,        — TRX-ID transaksi asal (wajib)
+ *   tanggal,       — tanggal retur diterima (wajib)
+ *   catatan,       — alasan retur (wajib)
+ *   operator,
+ *   keringHighKg, keringLowKg,
+ *   block1kgHigh, block1kgLow,
+ *   block5kgHigh, block5kgLow,
+ *   inputTime
+ * }
+ */
+function penjualanRetur(data) {
+  if (!data.trxRef)  return { ok: false, error: 'trxRef (TRX-ID transaksi asal) wajib diisi' };
+  if (!data.tanggal) return { ok: false, error: 'Tanggal retur wajib diisi' };
+  if (!data.catatan) return { ok: false, error: 'Alasan retur wajib diisi' };
+
+  // Cari & validasi transaksi asal
+  const sheet = getOrCreateSheet(SHEET_PENJUALAN, HEADERS_PENJUALAN);
+  const rows  = sheet.getDataRange().getValues();
+  let origRow = null;
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (String(r[JUAL_COL.TRX_ID]) !== String(data.trxRef)) continue;
+    if (String(r[JUAL_COL.STATUS]) !== 'submitted') {
+      return { ok: false, error: 'Transaksi asal ' + data.trxRef + ' tidak dalam status submitted' };
+    }
+    const jenisAsal = r[JUAL_COL.JENIS] || 'penjualan';
+    if (jenisAsal === 'retur') {
+      return { ok: false, error: 'Tidak bisa membuat retur dari transaksi retur' };
+    }
+    origRow = r;
+    break;
+  }
+  if (!origRow) return { ok: false, error: 'Transaksi asal tidak ditemukan: ' + data.trxRef };
+
+  const keringH = parseNum(data.keringHighKg);
+  const keringL = parseNum(data.keringLowKg);
+  const b1H     = parseNum(data.block1kgHigh);
+  const b1L     = parseNum(data.block1kgLow);
+  const b5H     = parseNum(data.block5kgHigh);
+  const b5L     = parseNum(data.block5kgLow);
+  const total   = keringH + keringL + b1H + b1L + b5H + b5L;
+
+  if (total <= 0) return { ok: false, error: 'Minimal 1 produk dengan qty retur > 0' };
+
+  // Validasi partial: qty retur tidak boleh melebihi qty original per produk
+  if (keringH > parseNum(origRow[JUAL_COL.KERING_H])) return { ok: false, error: 'Qty retur Kering High melebihi qty original (' + parseNum(origRow[JUAL_COL.KERING_H]) + ' kg)' };
+  if (keringL > parseNum(origRow[JUAL_COL.KERING_L])) return { ok: false, error: 'Qty retur Kering Low melebihi qty original (' + parseNum(origRow[JUAL_COL.KERING_L]) + ' kg)' };
+  if (b1H > parseNum(origRow[JUAL_COL.B1KG_H]))       return { ok: false, error: 'Qty retur Block 1kg High melebihi qty original (' + parseNum(origRow[JUAL_COL.B1KG_H]) + ' pcs)' };
+  if (b1L > parseNum(origRow[JUAL_COL.B1KG_L]))       return { ok: false, error: 'Qty retur Block 1kg Low melebihi qty original (' + parseNum(origRow[JUAL_COL.B1KG_L]) + ' pcs)' };
+  if (b5H > parseNum(origRow[JUAL_COL.B5KG_H]))       return { ok: false, error: 'Qty retur Block 5kg High melebihi qty original (' + parseNum(origRow[JUAL_COL.B5KG_H]) + ' pcs)' };
+  if (b5L > parseNum(origRow[JUAL_COL.B5KG_L]))       return { ok: false, error: 'Qty retur Block 5kg Low melebihi qty original (' + parseNum(origRow[JUAL_COL.B5KG_L]) + ' pcs)' };
+
+  // Harga diambil dari transaksi asal (per EC type)
+  const hargaKeringH = parseNum(origRow[JUAL_COL.HARGA_KERING_H]);
+  const hargaKeringL = parseNum(origRow[JUAL_COL.HARGA_KERING_L]);
+  const hargaB1H     = parseNum(origRow[JUAL_COL.HARGA_B1_H]);
+  const hargaB1L     = parseNum(origRow[JUAL_COL.HARGA_B1_L]);
+  const hargaB5H     = parseNum(origRow[JUAL_COL.HARGA_B5_H]);
+  const hargaB5L     = parseNum(origRow[JUAL_COL.HARGA_B5_L]);
+  const totalNilai   = keringH * hargaKeringH + keringL * hargaKeringL
+                     + b1H * hargaB1H + b1L * hargaB1L
+                     + b5H * hargaB5H + b5L * hargaB5L;
+
+  const trxId = generateTrxId(sheet, data.tanggal);
+  const now   = new Date();
+
+  const row = [
+    now,                                   // 0  Timestamp Server
+    trxId,                                 // 1  Transaction ID
+    data.tanggal,                          // 2  Tanggal retur
+    origRow[JUAL_COL.BUYER]    || '',      // 3  Buyer (sama dengan asal)
+    origRow[JUAL_COL.PO]       || '',      // 4  Nomor Invoice (sama)
+    origRow[JUAL_COL.DO]       || '',      // 5  Nomor DO (sama)
+    keringH,                               // 6  Kering High EC (kg)
+    keringL,                               // 7  Kering Low EC (kg)
+    b1H,                                   // 8  Block 1kg High EC
+    b1L,                                   // 9  Block 1kg Low EC
+    b5H,                                   // 10 Block 5kg High EC
+    b5L,                                   // 11 Block 5kg Low EC
+    hargaKeringH,                          // 12 Harga Kering High/kg (dari asal)
+    hargaKeringL,                          // 13 Harga Kering Low/kg (dari asal)
+    hargaB1H,                              // 14 Harga Block 1kg High (dari asal)
+    hargaB1L,                              // 15 Harga Block 1kg Low (dari asal)
+    hargaB5H,                              // 16 Harga Block 5kg High (dari asal)
+    hargaB5L,                              // 17 Harga Block 5kg Low (dari asal)
+    +totalNilai.toFixed(0),                // 18 Total Nilai
+    'submitted',                           // 19 Status
+    '',                                    // 20 Cancel Reason
+    '',                                    // 21 Foto DO URL
+    data.operator  || '',                  // 22 Operator
+    data.catatan   || '',                  // 23 Catatan (alasan retur)
+    data.inputTime || '',                  // 24 Input Time
+    '',                                    // 25 Cancel Time
+    '',                                    // 26 Cancel By
+    'retur',                               // 27 Jenis
+    data.trxRef                            // 28 TRX Referensi (link ke transaksi asal)
+  ];
+
+  sheet.appendRow(row);
+
+  return {
+    ok: true,
+    trxId: trxId,
+    trxRef: data.trxRef,
+    totalNilaiRetur: +totalNilai.toFixed(0),
+    saldoBaru: getPenjualanStock().saldo
+  };
+}
+
+// ── Helper: Generate Transaction ID ───────────────────────
+function generateTrxId(sheet, tanggal) {
+  const rows = sheet.getDataRange().getValues();
+  const ymd  = tanggal.replace(/-/g, '');
+  let maxSeq = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const id = String(rows[i][JUAL_COL.TRX_ID] || '');
+    const m  = id.match(new RegExp('^TRX-' + ymd + '-(\\d+)$'));
+    if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
+  }
+  return 'TRX-' + ymd + '-' + String(maxSeq + 1).padStart(3, '0');
+}
+
+// ── Migration helper: buat/update tab Output_Penjualan (idempotent) ──
+function migratePenjualan() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Buat sheet jika belum ada
+  let sheet = ss.getSheetByName(SHEET_PENJUALAN);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_PENJUALAN);
+    Logger.log('Sheet Output_Penjualan baru dibuat.');
+  }
+
+  // Sinkronkan header — extend jika kurang kolom (idempotent)
+  const existingCols = sheet.getLastColumn();
+  if (existingCols < HEADERS_PENJUALAN.length) {
+    sheet.getRange(1, 1, 1, HEADERS_PENJUALAN.length).setValues([HEADERS_PENJUALAN]);
+    Logger.log('Header diperbarui ke ' + HEADERS_PENJUALAN.length + ' kolom.');
+  }
+
+  // Backfill kolom Jenis (index 24) untuk baris existing
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    let filled = 0;
+    for (let i = 2; i <= lastRow; i++) {
+      const cell = sheet.getRange(i, JUAL_COL.JENIS + 1);
+      if (!cell.getValue()) {
+        cell.setValue('penjualan');
+        filled++;
+      }
+      // TRX Referensi (index 25): biarkan kosong untuk row lama (default '')
+    }
+    Logger.log('Backfill Jenis: ' + filled + ' baris diisi "penjualan".');
+  }
+
+  Logger.log('migratePenjualan selesai. Schema: ' + HEADERS_PENJUALAN.length + ' kolom.');
+}

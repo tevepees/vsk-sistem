@@ -27,7 +27,7 @@
 
 Monorepo gabungan modul **Produksi** + **Bahan Baku**, live di Cloudflare Workers.
 
-**Schema version:** v8 (per 2026-05-03 staging migrate, manual via Sheets UI karena Apps Script editor issue saat itu)
+**Schema version:** v9.2 (v8: EC split 2026-05-03; v9: Modul Penjualan + tab `Output_Penjualan`, 2026-05-21; v9.2: harga per EC type (6 field), rename Invoice, line-item table UI, fix POST Content-Type, 2026-05-22)
 
 **Repo:** https://github.com/tevepees/vsk-sistem
 **Branches:** `main` (production) + `staging`
@@ -45,7 +45,8 @@ vsk-sistem/
 ├── logo.svg                 # VSK logo (dimodifikasi user — JANGAN revert)
 ├── wrangler.jsonc           # CF Worker config dengan env staging+production
 ├── VSK_AppsScript_v7.js     # Backend v7 (legacy, dipertahankan)
-├── VSK_AppsScript_v8.js     # Backend v8 (live di production setelah manual migrate)
+├── VSK_AppsScript_v8.js     # Backend v8 (live di production — DO NOT MODIFY)
+├── VSK_AppsScript_v9.js     # Backend v9 (staging target — tambahan modul Penjualan)
 ├── dev-workflow-guide.html  # Panduan visual development workflow (untuk Tony)
 ├── CLAUDE.md                # File ini
 └── docs/
@@ -61,8 +62,9 @@ vsk-sistem/
 
 | Module | Function | Spreadsheet tabs |
 |--------|----------|---|
-| **Produksi** | Input shift harian (Pagi/Sore) — Karung, Basah, Kering, Block × (High EC / Low EC) | `Produksi` (19 kolom) |
+| **Produksi** | Input shift harian (Pagi/Sore) — Karung, Basah, Kering, Block × (High EC / Low EC) | `Produksi` (22 kolom) |
 | **Bahan Baku** (Rawmat) | Catat kedatangan rawmat per batch & per karung | `Rawmat_Kedatangan` (12 kol), `Rawmat_Karung` (8 kol), `Suppliers` (master, belum aktif) |
+| **Penjualan** (v9, staging) | Catat penjualan finished goods keluar gudang — stok otomatis berkurang | `Output_Penjualan` (23 kol) |
 | **Dashboard CEO** (planned) | Stock 3-tier real-time (basah/kering/block) — Q3-Q4 2026 | TBD |
 | **Absensi** (planned) | Attendance + GPS validation, repo terpisah | TBD |
 
@@ -116,6 +118,63 @@ vsk-sistem/
 ```
 
 **Rawmat_Karung** (8 kolom): Timestamp, Batch ID, Urut, Berat (kg), Flagged, Flag Reason, Operator, Time
+
+**Output_Penjualan** (29 kolom, index 0-based) — v9.2:
+```
+0  Timestamp Server
+1  Transaction ID         (format: TRX-YYYYMMDD-NNN, auto-generate)
+2  Tanggal
+3  Buyer
+4  Nomor Invoice          (renamed dari Nomor PO)
+5  Nomor DO
+6  Kering High EC (kg)
+7  Kering Low EC (kg)
+8  Block 1kg High EC      (pcs)
+9  Block 1kg Low EC       (pcs)
+10 Block 5kg High EC      (pcs)
+11 Block 5kg Low EC       (pcs)
+12 Harga Kering High/kg   (IDR; 0 = sample)
+13 Harga Kering Low/kg    (IDR; 0 = sample — per EC type sekarang)
+14 Harga Block 1kg High   (IDR)
+15 Harga Block 1kg Low    (IDR)
+16 Harga Block 5kg High   (IDR)
+17 Harga Block 5kg Low    (IDR)
+18 Total Nilai (IDR)      (auto-computed)
+19 Status                 ('submitted' / 'cancelled')
+20 Cancel Reason
+21 Foto DO URL            (Google Drive link, opsional)
+22 Operator
+23 Catatan                (untuk retur = alasan retur)
+24 Input Time
+25 Cancel Time
+26 Cancel By
+27 Jenis                  ('penjualan' | 'sample' | 'retur')
+28 TRX Referensi          (TRX-ID asal, diisi hanya untuk jenis='retur')
+```
+
+**Stock formula Penjualan (on-the-fly, dengan retur):**
+```
+// mult = (jenis='retur') ? -1 : +1  ← implemented di getPenjualanStock()
+Saldo Kering High = SUM(Produksi.col11) − SUM(col6 × mult WHERE status='submitted')
+Saldo Kering Low  = SUM(Produksi.col12) − SUM(col7 × mult WHERE status='submitted')
+Saldo Block 1kg H = SUM(Produksi.col22) − SUM(col8 × mult WHERE status='submitted')
+Saldo Block 1kg L = SUM(Produksi.col23) − SUM(col9 × mult WHERE status='submitted')
+Saldo Block 5kg H = SUM(Produksi.col24) − SUM(col10 × mult WHERE status='submitted')
+Saldo Block 5kg L = SUM(Produksi.col25) − SUM(col11 × mult WHERE status='submitted')
+```
+**JANGAN geser kolom 11–12 di Produksi (Kering H/L) dan 22–25 (Block H/L) — breaking dependency.**
+
+**Harga di Output_Penjualan** — v9.2 split per EC type (6 field, bukan 3):
+- col 12–13: Harga Kering High/Low per kg
+- col 14–15: Harga Block 1kg High/Low per pcs
+- col 16–17: Harga Block 5kg High/Low per pcs
+- Total Nilai = keringH×hargaKH + keringL×hargaKL + b1H×hargaB1H + b1L×hargaB1L + b5H×hargaB5H + b5L×hargaB5L
+
+**Produk penjualan yang didukung (frontend dropdown):**
+- Kering curah (Cocopeat Kering) — unit: kg
+- Block 1kg — unit: pcs
+- Block 5kg — unit: pcs
+- Basah curah ⏳ — listed di dropdown tapi disabled (backend belum support, rencana future)
 
 ---
 
@@ -299,13 +358,34 @@ npx wrangler deploy --env production
 
 ---
 
-## Last Session Summary (2026-05-05)
+## Last Session Summary (2026-05-22)
 
-Migrasi dari Cowork mode ke Claude Code. Sebelumnya selesai:
-- v8 schema deploy (full EC split untuk semua modul) — manual migrate via Sheets UI karena Apps Script editor issue
-- 5 improvement frontend: WhatsApp grup auto-open, factory icon Produksi, mobile icon active-only, DO placeholder, footer formal report dengan confidential notice
-- 4 dokumentasi formal di `docs/` (2 PRD, 1 SOP, 1 brainstorm negative cases)
+Implementasi Modul Penjualan (v9) — selesai:
+- `docs/PRD-Penjualan.md` — PRD lengkap modul Penjualan v1.0 (schema, endpoints, user stories, open questions)
+- `VSK_AppsScript_v9.js` — backend v9: 5 fungsi baru (getPenjualanStock, penjualanSave, penjualanCancel, getPenjualanRiwayat, getPenjualanRekap), tab Output_Penjualan (23 kolom), migratePenjualan()
+- `VSK_AppsScript_v8.js` — dipertahankan bersih (live production, tidak dimodifikasi)
+- `index.html` — sidebar + CSS + HTML section + IIFE modul Penjualan lengkap (stok card, form input, riwayat + cancel drawer)
+- `CLAUDE.md` — updated ke v9
 
-**Status:** Production stable, no urgent bugs. Ready untuk fase improvement berikutnya.
+**Status:** v9.2 siap untuk staging deploy. Production masih di v8.
 
-**Next critical:** NC-G (pengeringan gagal carry-over) + spreadsheet protection (NC-2.3) — keduanya prevent risiko data integrity.
+**Penambahan v9.1 (session 2026-05-21 lanjutan) — OQ resolved:**
+- `Jenis` (col 24→27) + `TRX Referensi` (col 25→28) ditambah ke schema Output_Penjualan
+- Sample shipment auto-detection: harga=0 → `jenis='sample'`, max 2 pcs Block / 5 kg Kering
+- Retur workflow (Opsi A): `penjualanRetur()` backend + inline form di drawer riwayat
+- Stock formula updated: retur pakai multiplier -1 (stok naik)
+
+**Revisi & bug fix v9.2 (session 2026-05-22):**
+1. **Tab order**: Input Penjualan sekarang tab pertama (default aktif), bukan Stok Tersedia
+2. **Line-item table**: Form produk diganti dari 3 blok tetap → dynamic table dengan baris: Produk (dropdown) + Type EC (dropdown) + Qty + Harga/unit. Produk dropdown: Kering curah / Block 1kg / Block 5kg / Basah curah (disabled — future)
+3. **Nomor Invoice**: Rename dari "Nomor PO" di UI + schema (`nomorInvoice` di payload, "Nomor Invoice" di header spreadsheet)
+4. **Harga per EC type**: Schema extend dari 3 harga (per produk) → 6 harga (per produk × EC type). Payload fields: `hargaKeringHigh`, `hargaKeringLow`, `hargaBlock1kgHigh`, `hargaBlock1kgLow`, `hargaBlock5kgHigh`, `hargaBlock5kgLow`
+5. **Bug fix critical**: Data tidak masuk DB karena `Content-Type: application/json` tidak boleh dipakai dengan `mode: no-cors` → fix ke `text/plain;charset=utf-8` (3 fetch: submit, cancel, retur)
+
+**Deploy checklist v9.2 (staging dulu):**
+1. Paste `VSK_AppsScript_v9.js` ke Apps Script **staging** → Deploy new version
+2. Run `migratePenjualan()` di Apps Script editor (1x, idempotent — buat tab Output_Penjualan + set header)
+3. `npx wrangler deploy --env staging` → test di staging URL
+4. Test flow: input penjualan dengan multi-baris (Kering High + Block 1kg Low) → pastikan masuk DB → cek rekap stok
+
+**Next critical (tetap):** NC-G (pengeringan gagal carry-over) + spreadsheet protection (NC-2.3).

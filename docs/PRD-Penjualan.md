@@ -1,7 +1,7 @@
 # PRD — Modul Penjualan VSK
 
-> **Status:** Draft v1.0  
-> **Tanggal:** 2026-05-19  
+> **Status:** v1.1 — OQ Resolved  
+> **Tanggal:** 2026-05-21  
 > **Author:** Tony Variantony (CEO, PT Varian Sumber Karya)  
 > **Scope:** Modul baru di vsk-sistem — mencatat penjualan / keluar gudang finished goods dan mengurangkan stok secara real-time.
 
@@ -67,12 +67,15 @@ Jika tidak diselesaikan: risiko over-promise ke buyer, stok "menghilang" tanpa j
 - Field wajib: Tanggal, Buyer/Customer, Nomor PO, Nomor Surat Jalan (DO), dan minimal 1 baris produk.
 - Field produk per baris: Jenis produk (dropdown), EC Type (High/Low), Jumlah (unit/pcs/kg), Harga per unit.
 - Produk yang tersedia di dropdown: `Kering (kg)`, `Block 1kg`, `Block 5kg`.
+- **Harga wajib diisi** (OQ-1 resolved). Pengecualian: harga = 0 diperbolehkan untuk *sample shipment* — sistem otomatis mendeteksi jika semua harga = 0 dan memberlakukan batas qty sample (max 2 pcs Block total, max 5 kg Kering).
 - Field opsional: Catatan, Upload foto surat jalan.
 - Acceptance criteria:
   - [ ] Form tidak bisa disubmit tanpa Tanggal, Buyer, PO, DO, dan minimal 1 produk valid.
   - [ ] Dropdown produk mencakup semua 3 jenis + pilihan EC type.
   - [ ] Validasi: qty > 0 dan tidak boleh melebihi stok tersedia saat submit.
   - [ ] Jika stok tidak cukup, muncul pesan error spesifik: "Stok [produk] [EC] tidak cukup. Tersedia: X, diminta: Y."
+  - [ ] Jika semua harga = 0 (sample), tampil indikator kuning + validasi max qty sample.
+  - [ ] Sample shipment yang melebihi batas qty → ditolak dengan pesan error spesifik.
 
 **5.2 Pengurangan stok otomatis**
 - Setelah penjualan berhasil disimpan, saldo finished goods berkurang sesuai qty yang dijual.
@@ -99,7 +102,7 @@ Jika tidak diselesaikan: risiko over-promise ke buyer, stok "menghilang" tanpa j
   - [ ] Filter bulan mengubah daftar tanpa full reload.
 
 **5.5 Cancel / void transaksi**
-- Admin (atau Tony) dapat membatalkan transaksi yang sudah submit selama masih di hari yang sama.
+- Admin **dan** Tony dapat membatalkan transaksi yang sudah submit (OQ-2 resolved).
 - Cancel mengembalikan stok ke posisi sebelum transaksi tersebut.
 - Harus isi alasan cancel (text field, wajib).
 - Acceptance criteria:
@@ -107,20 +110,34 @@ Jika tidak diselesaikan: risiko over-promise ke buyer, stok "menghilang" tanpa j
   - [ ] Stok dikembalikan otomatis setelah cancel.
   - [ ] Cancel di hari berbeda tidak diperbolehkan — tampil pesan "Hubungi admin untuk koreksi data lama."
 
+**5.6 Retur barang dari buyer** *(diimplementasi v1.1 setelah OQ-5 resolved)*
+- Admin dapat mencatat retur masuk dari buyer, mengacu pada TRX-ID transaksi asal.
+- Retur dapat **partial** — qty yang dikembalikan boleh lebih sedikit dari qty yang dijual.
+- Stok otomatis naik setelah retur dicatat (formula stock memperhitungkan `jenis='retur'` sebagai pengembalian).
+- Alasan retur wajib diisi.
+- Acceptance criteria:
+  - [ ] Admin dapat input retur dari halaman Riwayat → tombol "↩ Catat Retur Barang" pada drawer detail.
+  - [ ] Qty retur tidak bisa melebihi qty original per produk — error spesifik per produk.
+  - [ ] Transaksi retur tercatat sebagai baris baru di Output_Penjualan dengan `Jenis = 'retur'` dan `TRX Referensi` = TRX-ID asal.
+  - [ ] Stok saldo naik otomatis setelah retur disimpan.
+  - [ ] Rekap bulanan menampilkan angka net (penjualan − retur).
+  - [ ] Riwayat menampilkan badge "Retur" berwarna oranye untuk membedakan dari penjualan biasa.
+
 ### Nice-to-Have — P1
 
-**5.6 Upload foto surat jalan**
-- Foto diupload ke Google Drive, link disimpan di sheet.
+**5.7 Upload foto surat jalan** *(OQ-6 resolved)*
+- Foto diupload ke Google Drive folder `1g-Fw_N14WrV4mEBKUNv9nxeHwBU_r41c` (akses: variantony1@gmail.com).
+- Konstanta `DRIVE_FOLDER_FOTO_DO` sudah ada di Apps Script v9, siap digunakan.
 - Maksimal 1 foto per transaksi di v1.
 
-**5.7 Rekap penjualan bulanan**
-- Tabel ringkasan: total volume per produk, total nilai, breakdown per EC type.
+**5.8 Rekap penjualan bulanan**
+- Tabel ringkasan: total volume net per produk (sudah dikurangi retur), total nilai, breakdown per EC type.
 - Export-ready (bisa di-copy ke Excel).
 
-**5.8 Notifikasi Telegram**
+**5.9 Notifikasi Telegram**
 - Kirim pesan ke grup management setiap kali penjualan dicatat: "✅ Penjualan baru — [Buyer] — [DO] — [produk summary]"
 
-**5.9 Autocomplete nama buyer**
+**5.10 Autocomplete nama buyer**
 - Sistem menyimpan history nama buyer dan menawarkan autocomplete saat input.
 
 ### Future Considerations — P2
@@ -145,40 +162,53 @@ Tab ini dibuat di Google Sheets (staging + production) sebagai storage utama mod
 3  Buyer                  — nama buyer / customer (text)
 4  Nomor PO               — Purchase Order number (text)
 5  Nomor DO               — Delivery Order / Surat Jalan (text)
-6  Kering High EC (kg)    — qty kering high EC yang dijual
-7  Kering Low EC (kg)     — qty kering low EC yang dijual
-8  Block 1kg High EC      — pcs block 1kg high EC yang dijual
-9  Block 1kg Low EC       — pcs block 1kg low EC yang dijual
-10 Block 5kg High EC      — pcs block 5kg high EC yang dijual
-11 Block 5kg Low EC       — pcs block 5kg low EC yang dijual
-12 Harga Kering/kg        — harga per kg kering (IDR)
-13 Harga Block 1kg        — harga per pcs block 1kg (IDR)
-14 Harga Block 5kg        — harga per pcs block 5kg (IDR)
+6  Kering High EC (kg)    — qty kering high EC yang dijual / diretur
+7  Kering Low EC (kg)     — qty kering low EC yang dijual / diretur
+8  Block 1kg High EC      — pcs block 1kg high EC yang dijual / diretur
+9  Block 1kg Low EC       — pcs block 1kg low EC yang dijual / diretur
+10 Block 5kg High EC      — pcs block 5kg high EC yang dijual / diretur
+11 Block 5kg Low EC       — pcs block 5kg low EC yang dijual / diretur
+12 Harga Kering/kg        — harga per kg kering (IDR); 0 = sample shipment
+13 Harga Block 1kg        — harga per pcs block 1kg (IDR); 0 = sample shipment
+14 Harga Block 5kg        — harga per pcs block 5kg (IDR); 0 = sample shipment
 15 Total Nilai (IDR)      — auto-computed: sum semua produk × harga
 16 Status                 — 'submitted' / 'cancelled'
 17 Cancel Reason          — alasan cancel (kosong jika submitted)
 18 Foto DO URL            — link Google Drive foto surat jalan (opsional)
 19 Operator               — nama yang input
-20 Catatan                — notes bebas
+20 Catatan                — notes bebas; untuk retur = alasan retur
 21 Input Time             — waktu input oleh user (client-side)
 22 Cancel Time            — timestamp cancel (kosong jika submitted)
 23 Cancel By              — nama yang cancel (kosong jika submitted)
+24 Jenis                  — 'penjualan' | 'sample' | 'retur'
+25 TRX Referensi          — TRX-ID transaksi asal (diisi hanya untuk jenis='retur')
 ```
 
 ### 6.2 Formula stok finished goods
 
-Stok dihitung on-the-fly di Apps Script, tidak disimpan di sheet (sama dengan pola rawmat-stock):
+Stok dihitung on-the-fly di Apps Script, tidak disimpan di sheet (sama dengan pola rawmat-stock).
+
+Formula memperhitungkan `jenis` kolom (24): penjualan/sample mengurangi stok, retur mengembalikan stok:
 
 ```
-Saldo Kering High  = SUM(Produksi.Kering_High_EC) − SUM(Output_Penjualan.Kering_High_EC WHERE status='submitted')
-Saldo Kering Low   = SUM(Produksi.Kering_Low_EC)  − SUM(Output_Penjualan.Kering_Low_EC  WHERE status='submitted')
-Saldo Block 1kg H  = SUM(Produksi.Block_1kg_H)    − SUM(Output_Penjualan.Block_1kg_H    WHERE status='submitted')
-Saldo Block 1kg L  = SUM(Produksi.Block_1kg_L)    − SUM(Output_Penjualan.Block_1kg_L    WHERE status='submitted')
-Saldo Block 5kg H  = SUM(Produksi.Block_5kg_H)    − SUM(Output_Penjualan.Block_5kg_H    WHERE status='submitted')
-Saldo Block 5kg L  = SUM(Produksi.Block_5kg_L)    − SUM(Output_Penjualan.Block_5kg_L    WHERE status='submitted')
+Saldo Kering High  = SUM(Produksi.Kering_High_EC)
+                   − SUM(Output_Penjualan.Kering_High  WHERE status='submitted' AND jenis IN ('penjualan','sample'))
+                   + SUM(Output_Penjualan.Kering_High  WHERE status='submitted' AND jenis='retur')
+
+Saldo Kering Low   = (formula sama, Kering Low EC)
+Saldo Block 1kg H  = (formula sama, Block 1kg High)
+Saldo Block 1kg L  = (formula sama, Block 1kg Low)
+Saldo Block 5kg H  = (formula sama, Block 5kg High)
+Saldo Block 5kg L  = (formula sama, Block 5kg Low)
 ```
 
-**Catatan kritis:** Formula ini bergantung pada kolom `Block_1kg_H/L` dan `Block_5kg_H/L` di tab Produksi (index 22–25, sudah ada di HEADERS_PRODUKSI v8). Jangan geser index kolom tersebut.
+**Implementasi di Apps Script (v9):** menggunakan `multiplier = (jenis === 'retur') ? -1 : 1` pada loop akumulasi. Logika yang sama diterapkan di `getPenjualanRekap()` untuk rekap bulanan net.
+
+**Konstanta batas sample shipment (dapat diubah di Apps Script):**
+- `SAMPLE_MAX_BLOCK_PCS = 2` — max total Block pcs untuk sample
+- `SAMPLE_MAX_KERING_KG = 5` — max total Kering kg untuk sample
+
+**Catatan kritis:** Formula bergantung pada kolom `Block_1kg_H/L` dan `Block_5kg_H/L` di tab Produksi (index 22–25). Jangan geser index kolom tersebut.
 
 ---
 
@@ -190,8 +220,9 @@ Saldo Block 5kg L  = SUM(Produksi.Block_5kg_L)    − SUM(Output_Penjualan.Block
 - `?action=penjualan-rekap&bulan=YYYY-MM` — rekap bulanan per produk
 
 ### POST types baru:
-- `type: 'penjualan-save'` — simpan transaksi baru (validasi stok di server)
+- `type: 'penjualan-save'` — simpan transaksi baru; auto-detect sample jika semua harga=0; validasi stok + sample max qty di server
 - `type: 'penjualan-cancel'` — cancel transaksi + kembalikan stok
+- `type: 'penjualan-retur'` — catat retur masuk; validasi partial qty vs original; stok naik otomatis
 
 ---
 
@@ -217,14 +248,16 @@ Saldo Block 5kg L  = SUM(Produksi.Block_5kg_L)    − SUM(Output_Penjualan.Block
 
 ## 9. Open Questions
 
-| # | Pertanyaan | Owner | Blocking? |
+Semua OQ resolved per 2026-05-21.
+
+| # | Pertanyaan | Jawaban | Implementasi |
 |---|---|---|---|
-| OQ-1 | Apakah harga jual wajib diisi, atau bisa kosong untuk transaksi yang belum deal harga? | Tony | P0 — affects validation |
-| OQ-2 | Siapa saja yang boleh cancel transaksi? Admin saja, atau Tony juga? | Tony | P0 — affects auth design |
-| OQ-3 | Bolehkah 1 DO number dipakai untuk 2 transaksi berbeda? (misalnya DO yang sama untuk 2 pengiriman parsial?) | Tony | P0 — affects uniqueness constraint |
-| OQ-4 | Apakah stok Kering dan Block dihitung dalam unit yang sama atau berbeda? (Kering dalam kg, Block dalam pcs — sudah diasumsikan terpisah di schema ini) | Tony | konfirmasi saja |
-| OQ-5 | Bagaimana handle retur dari buyer? (Barang dikembalikan, stok perlu naik lagi) | Tony | P2 — tidak blocking v1 |
-| OQ-6 | Foto DO upload ke Drive folder mana? Perlu setup permission khusus? | Tony | P1 — blocking untuk feature upload |
+| OQ-1 | Apakah harga jual wajib diisi? | **Wajib.** Harga=0 diperbolehkan → otomatis diklasifikasikan sebagai sample shipment, dibatasi max 2 pcs Block / 5 kg Kering. | ✅ Backend `penjualanSave()` + frontend indicator |
+| OQ-2 | Siapa yang boleh cancel transaksi? | **Admin dan Tony** — keduanya boleh. | ✅ Tidak ada auth restriction di v1 |
+| OQ-3 | Bolehkah 1 DO number dipakai lebih dari 1 transaksi? | **Ya, boleh** — tidak ada uniqueness constraint pada Nomor DO. | ✅ Tidak perlu perubahan kode |
+| OQ-4 | Unit Kering dan Block sama atau berbeda? | **Berbeda** — Kering dalam kg, Block dalam pcs. Asumsi di schema sudah benar. | ✅ Sudah sesuai schema |
+| OQ-5 | Bagaimana handle retur dari buyer? | **Opsi A**: transaksi retur sebagai baris baru dengan `jenis='retur'`, partial return OK, admin langsung input tanpa approval. | ✅ Backend `penjualanRetur()` + frontend form di drawer |
+| OQ-6 | Foto DO upload ke folder Drive mana? | Folder ID: `1g-Fw_N14WrV4mEBKUNv9nxeHwBU_r41c` — akses variantony1@gmail.com. | ✅ Konstanta `DRIVE_FOLDER_FOTO_DO` sudah di v9 |
 
 ---
 

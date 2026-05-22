@@ -469,6 +469,34 @@ tbody tr:hover td{background:var(--cream);}
 .trx-produk-row span strong{color:var(--char);font-weight:600;}
 .trx-nilai{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--leaf);}
 .trx-meta{font-family:var(--mono);font-size:10px;color:var(--stone);margin-top:3px;}
+/* Jenis badge di riwayat + drawer */
+.jenis-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;margin-left:5px;vertical-align:middle;}
+.jenis-badge.sample{background:#fff3cd;color:#856404;}
+.jenis-badge.retur{background:#ffe5d0;color:#c5460a;}
+/* Sample indicator di form input */
+/* Penjualan — line-item table */
+.pjl-line-wrap{margin:8px 0 4px;}
+.pjl-line-table{width:100%;border-collapse:collapse;}
+.pjl-line-table th{font-family:var(--mono);font-size:9px;color:var(--sand);text-transform:uppercase;letter-spacing:.07em;padding:6px 4px;text-align:left;border-bottom:1px solid var(--border2);}
+.pjl-line-table td{padding:5px 3px;vertical-align:top;border-bottom:1px solid var(--border);}
+.pjl-line-table tbody tr:last-child td{border-bottom:none;}
+.pjl-line-select{width:100%;font-family:var(--sans);font-size:12px;border:1px solid var(--border2);border-radius:8px;padding:6px 5px;background:white;color:var(--char);cursor:pointer;min-width:0;}
+.pjl-line-input{width:100%;font-family:var(--mono);font-size:12px;border:1px solid var(--border2);border-radius:8px;padding:6px 5px;background:white;color:var(--char);min-width:0;}
+.pjl-line-unit{font-family:var(--mono);font-size:10px;color:var(--stone);margin-left:2px;white-space:nowrap;}
+.pjl-line-hint{font-family:var(--mono);font-size:10px;color:var(--stone);display:block;margin-top:2px;line-height:1.3;}
+.pjl-line-hint.over{color:var(--rose);}
+.pjl-del-btn{border:none;background:none;cursor:pointer;color:var(--rose);font-size:14px;padding:6px 4px;opacity:.6;line-height:1;}
+.pjl-del-btn:hover{opacity:1;}
+.pjl-add-row-btn{width:100%;margin-top:6px;border:1px dashed var(--border2);background:white;border-radius:var(--r);padding:9px 16px;font-family:var(--sans);font-size:13px;color:var(--brown);cursor:pointer;text-align:center;transition:background .15s;}
+.pjl-add-row-btn:hover{background:var(--cream2);}
+#pjl-sample-indicator{display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:var(--r);padding:8px 12px;font-size:12px;color:#856404;margin-top:8px;font-weight:500;}
+/* Tombol catat retur */
+.btn-retur{background:#fd7e14;color:white;border:none;padding:10px 18px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;}
+.btn-retur:hover{background:#e8680a;}
+/* Inline retur form di drawer */
+.retur-form{background:var(--cream2);border-radius:var(--r);padding:14px;margin-top:12px;border:1px solid #fcd3b0;}
+.retur-form-title{font-size:13px;font-weight:700;color:#c5460a;margin-bottom:10px;}
+.retur-form .grid2{margin-top:8px;}
 .tbl-status.submitted{background:var(--leaf-bg);color:var(--leaf);}
 
 /* ═══════════════════════════════════════════════════════════
@@ -1032,13 +1060,13 @@ tbody tr:hover td{background:var(--cream);}
   </header>
 
   <nav class="subnav" id="penjualan-subnav">
-    <button class="subnav-btn active" data-pane="stok" type="button">Stok Tersedia</button>
-    <button class="subnav-btn" data-pane="input" type="button">Input Penjualan</button>
+    <button class="subnav-btn active" data-pane="input" type="button">Input Penjualan</button>
+    <button class="subnav-btn" data-pane="stok" type="button">Stok Tersedia</button>
     <button class="subnav-btn" data-pane="riwayat" type="button">Riwayat</button>
   </nav>
 
   <!-- ── PAGE: Stok Tersedia ── -->
-  <div class="page active" data-pane="stok" id="pjl-page-stok">
+  <div class="page" data-pane="stok" id="pjl-page-stok">
     <div class="sec">
       <span class="sec-title">Stok Finished Goods</span>
       <div class="sec-line"></div>
@@ -1060,7 +1088,7 @@ tbody tr:hover td{background:var(--cream);}
   </div>
 
   <!-- ── PAGE: Input Penjualan ── -->
-  <div class="page" data-pane="input" id="pjl-page-input">
+  <div class="page active" data-pane="input" id="pjl-page-input">
 
     <!-- Info stok mini -->
     <div class="sec">
@@ -1090,8 +1118,8 @@ tbody tr:hover td{background:var(--cream);}
 
     <div class="grid2" style="margin-top:10px;">
       <div class="field">
-        <label class="f-label">Nomor PO *</label>
-        <div class="f-wrap"><input type="text" id="pjl-po" placeholder="PO-XXXX" class="no-unit"></div>
+        <label class="f-label">Nomor Invoice *</label>
+        <div class="f-wrap"><input type="text" id="pjl-po" placeholder="INV-XXXX" class="no-unit"></div>
       </div>
       <div class="field">
         <label class="f-label">Nomor DO / Surat Jalan *</label>
@@ -1099,97 +1127,28 @@ tbody tr:hover td{background:var(--cream);}
       </div>
     </div>
 
-    <!-- Produk yang dijual -->
+    <!-- Produk yang dijual — line-item table -->
     <div class="sec" style="margin-top:18px;">
       <span class="sec-title">Produk yang dijual</span>
       <div class="sec-line"></div>
     </div>
 
-    <!-- Kering -->
-    <div class="produk-baris" id="pb-kering">
-      <div class="pb-head">
-        <div class="pb-type">🌿 Kering (cocopeat kering)</div>
-      </div>
-      <div class="pb-fields">
-        <div class="field">
-          <label class="f-label">High EC (kg)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-kering-h" min="0" step="0.01" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-kering-h">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Low EC (kg)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-kering-l" min="0" step="0.01" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-kering-l">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Harga/kg (IDR)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-harga-kering" min="0" step="100" placeholder="0" class="no-unit">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Block 1kg -->
-    <div class="produk-baris" id="pb-b1">
-      <div class="pb-head">
-        <div class="pb-type">🧱 Block 1kg</div>
-      </div>
-      <div class="pb-fields">
-        <div class="field">
-          <label class="f-label">High EC (pcs)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-b1-h" min="0" step="1" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-b1-h">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Low EC (pcs)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-b1-l" min="0" step="1" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-b1-l">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Harga/pcs (IDR)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-harga-b1" min="0" step="100" placeholder="0" class="no-unit">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Block 5kg -->
-    <div class="produk-baris" id="pb-b5">
-      <div class="pb-head">
-        <div class="pb-type">📦 Block 5kg</div>
-      </div>
-      <div class="pb-fields">
-        <div class="field">
-          <label class="f-label">High EC (pcs)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-b5-h" min="0" step="1" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-b5-h">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Low EC (pcs)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-b5-l" min="0" step="1" placeholder="0" class="no-unit">
-          </div>
-          <div class="pb-stock-hint" id="hint-b5-l">Stok: —</div>
-        </div>
-        <div class="field">
-          <label class="f-label">Harga/pcs (IDR)</label>
-          <div class="f-wrap">
-            <input type="number" id="pjl-harga-b5" min="0" step="100" placeholder="0" class="no-unit">
-          </div>
-        </div>
-      </div>
+    <div class="pjl-line-wrap">
+      <table class="pjl-line-table">
+        <thead>
+          <tr>
+            <th style="width:35%">Produk</th>
+            <th style="width:18%">Type EC</th>
+            <th style="width:22%">Qty</th>
+            <th style="width:20%">Harga/unit (IDR)</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="pjl-line-tbody">
+          <!-- rows ditambah via JS addTableRow() -->
+        </tbody>
+      </table>
+      <button class="pjl-add-row-btn" id="pjl-add-row" type="button">+ Tambah baris produk</button>
     </div>
 
     <!-- Total nilai preview -->
@@ -1197,6 +1156,8 @@ tbody tr:hover td{background:var(--cream);}
       <div class="hero-label">Total nilai penjualan</div>
       <div class="hero-val" id="pjl-total-preview"><sup>Rp</sup>0</div>
     </div>
+    <!-- Sample shipment indicator -->
+    <div id="pjl-sample-indicator">⚠️ Sample Shipment — semua harga 0. Batas: max 2 pcs Block, max 5 kg Kering.</div>
 
     <!-- Catatan -->
     <div class="field" style="margin-top:10px;">
@@ -2615,7 +2576,7 @@ tbody tr:hover td{background:var(--cream);}
   function renderStokMini(){
     var el = document.getElementById('pjl-input-stok-mini');
     fetchStok(function(d){
-      if(!d.ok){ el.innerHTML=''; updateHints(null); return; }
+      if(!d.ok){ el.innerHTML=''; return; }
       var s = d.saldo;
       el.innerHTML =
         '<div class="stok-grid" style="margin-bottom:14px;">'
@@ -2629,59 +2590,129 @@ tbody tr:hover td{background:var(--cream);}
         +'<div class="stok-cell low-border"><div class="st-label">B5kg L</div><div class="st-val">'+s.block5kgLow+'<span class="st-unit">pcs</span></div></div>'
         +'<div></div>'
         +'</div>';
-      updateHints(s);
+      updateAllRowHints();
     });
   }
 
-  function updateHints(s){
-    function setHint(id, avail, input, unit){
-      var el = document.getElementById(id);
-      if(!el) return;
-      var qty = pn(input ? input.value : 0);
-      if(!s){ el.textContent='Stok: —'; el.className='pb-stock-hint'; return; }
-      if(qty > avail){
-        el.textContent='⚠ Stok '+avail+' '+unit+', diminta '+qty;
-        el.className='pb-stock-hint over';
-      } else if(qty > 0 && qty <= avail){
-        el.textContent='Stok: '+avail+' '+unit+' ✓';
-        el.className='pb-stock-hint';
-      } else {
-        el.textContent='Stok: '+avail+' '+unit;
-        el.className='pb-stock-hint';
+  // ── Table row management ───────────────────────────────────
+  function addTableRow(product, ec, qty, harga){
+    var tbody = qs('#pjl-line-tbody');
+    var tr = document.createElement('tr');
+    tr.className = 'pjl-line-row';
+    tr.innerHTML =
+      '<td>'
+      +'<select class="pjl-line-select pjl-line-product">'
+      +'<option value="">— Pilih produk —</option>'
+      +'<option value="kering">Kering curah</option>'
+      +'<option value="block1kg">Block 1kg</option>'
+      +'<option value="block5kg">Block 5kg</option>'
+      +'<option value="basah" disabled>Basah curah ⏳</option>'
+      +'</select>'
+      +'</td>'
+      +'<td>'
+      +'<select class="pjl-line-select pjl-line-ec">'
+      +'<option value="high">High EC</option>'
+      +'<option value="low">Low EC</option>'
+      +'</select>'
+      +'</td>'
+      +'<td style="white-space:nowrap;">'
+      +'<input type="number" class="pjl-line-input pjl-line-qty" min="0" step="0.01" placeholder="0" style="width:70px;">'
+      +'<span class="pjl-line-unit">—</span>'
+      +'<span class="pjl-line-hint"></span>'
+      +'</td>'
+      +'<td>'
+      +'<input type="number" class="pjl-line-input pjl-line-harga" min="0" step="100" placeholder="0">'
+      +'</td>'
+      +'<td style="text-align:center;">'
+      +'<button class="pjl-del-btn" type="button" title="Hapus baris">✕</button>'
+      +'</td>';
+    tbody.appendChild(tr);
+
+    var selProd  = tr.querySelector('.pjl-line-product');
+    var selEc    = tr.querySelector('.pjl-line-ec');
+    var inpQty   = tr.querySelector('.pjl-line-qty');
+    var inpHarga = tr.querySelector('.pjl-line-harga');
+
+    if(product) selProd.value  = product;
+    if(ec)      selEc.value    = ec;
+    if(qty)     inpQty.value   = qty;
+    if(harga)   inpHarga.value = harga;
+
+    updateRowUnit(tr);
+
+    tr.querySelector('.pjl-del-btn').addEventListener('click', function(){
+      var allRows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+      if(allRows.length <= 1){
+        selProd.value = ''; selEc.value = 'high';
+        inpQty.value = ''; inpHarga.value = '';
+        updateRowUnit(tr); updateRowHint(tr); updateTotal();
+        return;
       }
+      tr.parentNode.removeChild(tr);
+      updateTotal();
+    });
+
+    selProd.addEventListener('change', function(){ updateRowUnit(tr); updateRowHint(tr); updateTotal(); });
+    selEc.addEventListener('change',   function(){ updateRowHint(tr); updateTotal(); });
+    inpQty.addEventListener('input',   function(){ updateRowHint(tr); updateTotal(); });
+    inpHarga.addEventListener('input', updateTotal);
+    return tr;
+  }
+
+  function updateRowUnit(tr){
+    var product = tr.querySelector('.pjl-line-product').value;
+    var unitEl  = tr.querySelector('.pjl-line-unit');
+    var inpQty  = tr.querySelector('.pjl-line-qty');
+    if(product === 'kering' || product === 'basah'){
+      unitEl.textContent = 'kg'; inpQty.step = '0.01';
+    } else if(product === 'block1kg' || product === 'block5kg'){
+      unitEl.textContent = 'pcs'; inpQty.step = '1';
+    } else {
+      unitEl.textContent = '—';
     }
-    var keringH = qs('#pjl-kering-h');
-    var keringL = qs('#pjl-kering-l');
-    var b1H = qs('#pjl-b1-h');
-    var b1L = qs('#pjl-b1-l');
-    var b5H = qs('#pjl-b5-h');
-    var b5L = qs('#pjl-b5-l');
-    if(s){
-      setHint('hint-kering-h', s.keringHighKg, keringH, 'kg');
-      setHint('hint-kering-l', s.keringLowKg,  keringL, 'kg');
-      setHint('hint-b1-h',     s.block1kgHigh,  b1H,    'pcs');
-      setHint('hint-b1-l',     s.block1kgLow,   b1L,    'pcs');
-      setHint('hint-b5-h',     s.block5kgHigh,  b5H,    'pcs');
-      setHint('hint-b5-l',     s.block5kgLow,   b5L,    'pcs');
+  }
+
+  function updateRowHint(tr){
+    var product = tr.querySelector('.pjl-line-product').value;
+    var ec      = tr.querySelector('.pjl-line-ec').value;
+    var qty     = pn(tr.querySelector('.pjl-line-qty').value);
+    var hintEl  = tr.querySelector('.pjl-line-hint');
+    if(!stokCache || !product){ hintEl.textContent = ''; return; }
+    var avail = 0, unit = '';
+    if(product==='kering'   && ec==='high'){ avail=stokCache.keringHighKg; unit='kg';  }
+    else if(product==='kering'   && ec==='low') { avail=stokCache.keringLowKg;  unit='kg';  }
+    else if(product==='block1kg' && ec==='high'){ avail=stokCache.block1kgHigh; unit='pcs'; }
+    else if(product==='block1kg' && ec==='low') { avail=stokCache.block1kgLow;  unit='pcs'; }
+    else if(product==='block5kg' && ec==='high'){ avail=stokCache.block5kgHigh; unit='pcs'; }
+    else if(product==='block5kg' && ec==='low') { avail=stokCache.block5kgLow;  unit='pcs'; }
+    else { hintEl.textContent=''; return; }
+    if(qty > avail){
+      hintEl.textContent = '⚠ Stok: '+avail+' '+unit;
+      hintEl.className = 'pjl-line-hint over';
+    } else {
+      hintEl.textContent = 'Stok: '+avail+' '+unit;
+      hintEl.className = 'pjl-line-hint';
     }
+  }
+
+  function updateAllRowHints(){
+    qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row').forEach(updateRowHint);
   }
 
   // ── Live total preview ─────────────────────────────────────
   function updateTotal(){
-    var keringH = pn(qs('#pjl-kering-h').value);
-    var keringL = pn(qs('#pjl-kering-l').value);
-    var b1H     = pn(qs('#pjl-b1-h').value);
-    var b1L     = pn(qs('#pjl-b1-l').value);
-    var b5H     = pn(qs('#pjl-b5-h').value);
-    var b5L     = pn(qs('#pjl-b5-l').value);
-    var hK  = pn(qs('#pjl-harga-kering').value);
-    var hB1 = pn(qs('#pjl-harga-b1').value);
-    var hB5 = pn(qs('#pjl-harga-b5').value);
-    var total = (keringH + keringL) * hK + (b1H + b1L) * hB1 + (b5H + b5L) * hB5;
-    var el = qs('#pjl-total-preview');
-    el.innerHTML = '<sup>Rp</sup>' + Number(total).toLocaleString('id-ID');
-    // Juga update hints (qty bisa berubah)
-    if(stokCache) updateHints(stokCache);
+    var rows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+    var total = 0, hasQty = false, allZeroHarga = true;
+    rows.forEach(function(tr){
+      var qty   = pn(tr.querySelector('.pjl-line-qty').value);
+      var harga = pn(tr.querySelector('.pjl-line-harga').value);
+      total += qty * harga;
+      if(qty > 0) hasQty = true;
+      if(harga > 0) allZeroHarga = false;
+    });
+    qs('#pjl-total-preview').innerHTML = '<sup>Rp</sup>' + Number(total).toLocaleString('id-ID');
+    var ind = qs('#pjl-sample-indicator');
+    if(ind) ind.style.display = (hasQty && allZeroHarga) ? 'block' : 'none';
   }
 
   // ── Submit penjualan ──────────────────────────────────────
@@ -2689,43 +2720,55 @@ tbody tr:hover td{background:var(--cream);}
     showErr('');
     var tanggal = qs('#pjl-tanggal').value;
     var buyer   = qs('#pjl-buyer').value.trim();
-    var po      = qs('#pjl-po').value.trim();
+    var invoice = qs('#pjl-po').value.trim();
     var doNum   = qs('#pjl-do').value.trim();
-    if(!tanggal){ showErr('Tanggal wajib diisi.'); return; }
-    if(!buyer)  { showErr('Nama buyer wajib diisi.'); return; }
-    if(!po)     { showErr('Nomor PO wajib diisi.'); return; }
-    if(!doNum)  { showErr('Nomor DO/Surat Jalan wajib diisi.'); return; }
+    if(!tanggal) { showErr('Tanggal wajib diisi.'); return; }
+    if(!buyer)   { showErr('Nama buyer wajib diisi.'); return; }
+    if(!invoice) { showErr('Nomor Invoice wajib diisi.'); return; }
+    if(!doNum)   { showErr('Nomor DO/Surat Jalan wajib diisi.'); return; }
 
-    var keringH = pn(qs('#pjl-kering-h').value);
-    var keringL = pn(qs('#pjl-kering-l').value);
-    var b1H     = pn(qs('#pjl-b1-h').value);
-    var b1L     = pn(qs('#pjl-b1-l').value);
-    var b5H     = pn(qs('#pjl-b5-h').value);
-    var b5L     = pn(qs('#pjl-b5-l').value);
-    var total   = keringH + keringL + b1H + b1L + b5H + b5L;
-    if(total <= 0){ showErr('Minimal 1 produk dengan qty > 0.'); return; }
+    // Kumpulkan data dari tabel baris produk
+    var rows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+    var keringH=0, keringL=0, b1H=0, b1L=0, b5H=0, b5L=0;
+    var hKH=0, hKL=0, hB1H=0, hB1L=0, hB5H=0, hB5L=0;
+    rows.forEach(function(tr){
+      var product = tr.querySelector('.pjl-line-product').value;
+      var ec      = tr.querySelector('.pjl-line-ec').value;
+      var qty     = pn(tr.querySelector('.pjl-line-qty').value);
+      var harga   = pn(tr.querySelector('.pjl-line-harga').value);
+      if(!product || qty <= 0) return;
+      if(product==='kering'   && ec==='high'){ keringH+=qty; hKH=harga; }
+      if(product==='kering'   && ec==='low') { keringL+=qty; hKL=harga; }
+      if(product==='block1kg' && ec==='high'){ b1H+=qty;     hB1H=harga; }
+      if(product==='block1kg' && ec==='low') { b1L+=qty;     hB1L=harga; }
+      if(product==='block5kg' && ec==='high'){ b5H+=qty;     hB5H=harga; }
+      if(product==='block5kg' && ec==='low') { b5L+=qty;     hB5L=harga; }
+    });
+    var totalQty = keringH + keringL + b1H + b1L + b5H + b5L;
+    if(totalQty <= 0){ showErr('Minimal 1 baris produk dengan qty > 0.'); return; }
 
     var btn = qs('#pjl-submit');
     btn.disabled = true; btn.textContent = 'Menyimpan...';
 
     var payload = {
       type: 'penjualan-save',
-      tanggal: tanggal, buyer: buyer, nomorPO: po, nomorDO: doNum,
+      tanggal: tanggal, buyer: buyer,
+      nomorInvoice: invoice, nomorDO: doNum,
       keringHighKg: keringH, keringLowKg: keringL,
       block1kgHigh: b1H, block1kgLow: b1L,
       block5kgHigh: b5H, block5kgLow: b5L,
-      hargaKering:  pn(qs('#pjl-harga-kering').value),
-      hargaBlock1kg: pn(qs('#pjl-harga-b1').value),
-      hargaBlock5kg: pn(qs('#pjl-harga-b5').value),
+      hargaKeringHigh: hKH, hargaKeringLow: hKL,
+      hargaBlock1kgHigh: hB1H, hargaBlock1kgLow: hB1L,
+      hargaBlock5kgHigh: hB5H, hargaBlock5kgLow: hB5L,
       catatan: qs('#pjl-catatan').value.trim(),
-      operator: '', // TODO: ambil dari localStorage jika ada session
+      operator: '',
       inputTime: new Date().toISOString()
     };
 
     fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify(payload)
     })
     .then(function(){
@@ -2745,15 +2788,17 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   function resetForm(){
-    ['pjl-tanggal','pjl-buyer','pjl-po','pjl-do','pjl-catatan',
-     'pjl-kering-h','pjl-kering-l','pjl-b1-h','pjl-b1-l',
-     'pjl-b5-h','pjl-b5-l','pjl-harga-kering','pjl-harga-b1','pjl-harga-b5']
-    .forEach(function(id){
-      var el = qs('#'+id);
-      if(el) el.value = '';
-    });
+    ['pjl-tanggal','pjl-buyer','pjl-po','pjl-do','pjl-catatan']
+    .forEach(function(id){ var el=qs('#'+id); if(el) el.value=''; });
+    // Reset tabel ke 1 baris kosong
+    var tbody = qs('#pjl-line-tbody');
+    tbody.innerHTML = '';
+    addTableRow();
     qs('#pjl-total-preview').innerHTML = '<sup>Rp</sup>0';
     showErr('');
+    // Restore default date
+    var today = new Date();
+    qs('#pjl-tanggal').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   }
 
   // ── Riwayat ───────────────────────────────────────────────
@@ -2773,6 +2818,10 @@ tbody tr:hover td{background:var(--cream);}
         d.transaksi.forEach(function(t){
           var statusCls = t.status === 'submitted' ? 'submitted' : 'cancelled';
           var statusLabel = t.status === 'submitted' ? 'Submit' : 'Cancel';
+          var jenis = t.jenis || 'penjualan';
+          var jenisBadge = '';
+          if(jenis === 'sample') jenisBadge = '<span class="jenis-badge sample">Sample</span>';
+          else if(jenis === 'retur') jenisBadge = '<span class="jenis-badge retur">Retur</span>';
           var produkLines = [];
           if(t.keringHighKg > 0) produkLines.push('<span>Kering H: <strong>'+t.keringHighKg.toFixed(2)+' kg</strong></span>');
           if(t.keringLowKg  > 0) produkLines.push('<span>Kering L: <strong>'+t.keringLowKg.toFixed(2)+' kg</strong></span>');
@@ -2783,7 +2832,7 @@ tbody tr:hover td{background:var(--cream);}
 
           html += '<div class="trx-card" data-trx="'+encodeURIComponent(JSON.stringify(t))+'">'
             +'<div class="trx-head">'
-            +'<div><div class="trx-id">'+t.trxId+'</div><div class="trx-buyer">'+t.buyer+'</div><div class="trx-do">DO: '+t.nomorDO+'</div></div>'
+            +'<div><div class="trx-id">'+t.trxId+jenisBadge+'</div><div class="trx-buyer">'+t.buyer+'</div><div class="trx-do">DO: '+t.nomorDO+(t.trxRef?' ↩ '+t.trxRef:'')+'</div></div>'
             +'<div style="text-align:right;"><span class="tbl-status '+statusCls+'">'+statusLabel+'</span><div style="font-family:var(--mono);font-size:10px;color:var(--stone);margin-top:4px;">'+t.tanggal+'</div></div>'
             +'</div>'
             +'<div class="trx-body">'
@@ -2811,17 +2860,30 @@ tbody tr:hover td{background:var(--cream);}
   function openDrawer(t){
     var drawer = qs('#pjl-drawer');
     var body   = qs('#pjl-dr-body');
+    var jenis  = t.jenis || 'penjualan';
     qs('#pjl-dr-title').textContent = t.trxId;
 
-    var cancelBtn = t.status === 'submitted'
+    var jenisBadgeHtml = '';
+    if(jenis === 'sample') jenisBadgeHtml = '<span class="jenis-badge sample" style="margin-left:0;display:block;margin-bottom:6px;">Sample Shipment</span>';
+    else if(jenis === 'retur') jenisBadgeHtml = '<span class="jenis-badge retur" style="margin-left:0;display:block;margin-bottom:6px;">Retur Barang</span>';
+
+    var trxRefInfo = (jenis === 'retur' && t.trxRef)
+      ? '<div style="margin-top:6px;font-size:12px;color:var(--stone);">Referensi transaksi asal: <span style="font-family:var(--mono);color:var(--leaf);font-weight:600;">'+t.trxRef+'</span></div>' : '';
+
+    var cancelBtn = (t.status === 'submitted')
       ? '<button class="btn-danger" id="pjl-cancel-btn" type="button">Batalkan transaksi ini</button>' : '';
-    var cancelInfo = t.status === 'cancelled'
+    var cancelInfo = (t.status === 'cancelled')
       ? '<div style="background:var(--rose-bg);padding:10px;border-radius:var(--r);font-size:12px;color:var(--rose);margin-top:10px;">Dibatalkan: '+t.cancelReason+'</div>' : '';
+    // Tombol retur: hanya untuk penjualan/sample yang submitted (bukan retur, bukan cancelled)
+    var returBtn = (t.status === 'submitted' && jenis !== 'retur')
+      ? '<button class="btn-retur" id="pjl-retur-btn" type="button">↩ Catat Retur Barang</button>' : '';
 
     body.innerHTML =
-      '<div class="field"><div class="f-label">Buyer</div><div style="font-size:15px;font-weight:600;color:var(--char);">'+t.buyer+'</div></div>'
+      jenisBadgeHtml
+      +'<div class="field"><div class="f-label">Buyer</div><div style="font-size:15px;font-weight:600;color:var(--char);">'+t.buyer+'</div></div>'
+      + trxRefInfo
       +'<div class="grid2" style="margin-top:10px;">'
-      +'<div class="field"><div class="f-label">Nomor PO</div><div style="font-family:var(--mono);font-size:13px;">'+t.nomorPO+'</div></div>'
+      +'<div class="field"><div class="f-label">Nomor Invoice</div><div style="font-family:var(--mono);font-size:13px;">'+(t.nomorInvoice||t.nomorPO||'—')+'</div></div>'
       +'<div class="field"><div class="f-label">Nomor DO</div><div style="font-family:var(--mono);font-size:13px;">'+t.nomorDO+'</div></div>'
       +'</div>'
       +'<div class="grid2" style="margin-top:10px;">'
@@ -2839,10 +2901,13 @@ tbody tr:hover td{background:var(--cream);}
       +'</div>'
       +(t.catatan?'<div class="log-note" style="margin:10px 0 0;">'+t.catatan+'</div>':'')
       + cancelInfo
-      + cancelBtn;
+      + returBtn
+      + cancelBtn
+      + '<div id="pjl-retur-form-area"></div>';
 
     drawer.classList.add('show');
 
+    // ── Handler: Batalkan ──
     var cancelEl = body.querySelector('#pjl-cancel-btn');
     if(cancelEl){
       cancelEl.addEventListener('click', function(){
@@ -2852,7 +2917,7 @@ tbody tr:hover td{background:var(--cream);}
         var payload = { type:'penjualan-cancel', trxId:t.trxId, cancelReason:reason.trim(), cancelBy:'' };
         fetch(SHEETS_URL, {
           method:'POST', mode:'no-cors',
-          headers:{'Content-Type':'application/json'},
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
           body: JSON.stringify(payload)
         }).then(function(){
           drawer.classList.remove('show');
@@ -2865,6 +2930,95 @@ tbody tr:hover td{background:var(--cream);}
         });
       });
     }
+
+    // ── Handler: Catat Retur ──
+    var returBtnEl = body.querySelector('#pjl-retur-btn');
+    if(returBtnEl){
+      returBtnEl.addEventListener('click', function(){
+        returBtnEl.style.display = 'none';
+        showReturForm(t, body.querySelector('#pjl-retur-form-area'));
+      });
+    }
+  }
+
+  // ── Inline retur form ─────────────────────────────────────
+  function showReturForm(t, container){
+    var today = new Date();
+    var todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+    // Bangun input qty per produk yang punya qty di transaksi asal
+    var qtyRows = '';
+    if(t.keringHighKg > 0) qtyRows += '<div class="field"><label class="f-label">Kering High EC — maks '+t.keringHighKg.toFixed(2)+' kg</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-kh" min="0" max="'+t.keringHighKg+'" step="0.01" placeholder="0" class="no-unit"><span class="f-unit">kg</span></div></div>';
+    if(t.keringLowKg > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Kering Low EC — maks '+t.keringLowKg.toFixed(2)+' kg</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-kl" min="0" max="'+t.keringLowKg+'" step="0.01" placeholder="0" class="no-unit"><span class="f-unit">kg</span></div></div>';
+    if(t.block1kgHigh > 0) qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 1kg High — maks '+t.block1kgHigh+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b1h" min="0" max="'+t.block1kgHigh+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block1kgLow > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 1kg Low — maks '+t.block1kgLow+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b1l" min="0" max="'+t.block1kgLow+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block5kgHigh > 0) qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 5kg High — maks '+t.block5kgHigh+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b5h" min="0" max="'+t.block5kgHigh+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block5kgLow > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 5kg Low — maks '+t.block5kgLow+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b5l" min="0" max="'+t.block5kgLow+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+
+    container.innerHTML =
+      '<div class="retur-form">'
+      +'<div class="retur-form-title">↩ Form Retur Barang</div>'
+      +'<div class="field"><label class="f-label">Tanggal Retur</label>'
+      +'<div class="f-wrap"><input type="date" id="rt-tanggal" value="'+todayStr+'" class="no-unit"></div></div>'
+      + qtyRows
+      +'<div class="field" style="margin-top:8px;"><label class="f-label">Alasan Retur <span style="color:var(--rose)">*</span></label>'
+      +'<div class="f-wrap"><textarea id="rt-catatan" placeholder="Alasan retur (wajib)..." style="height:56px;"></textarea></div></div>'
+      +'<div id="rt-error" style="display:none;background:var(--rose-bg);padding:8px 12px;border-radius:var(--r);font-size:12px;color:var(--rose);margin-top:8px;"></div>'
+      +'<button class="btn-retur" id="rt-submit" type="button" style="margin-top:10px;">Simpan Retur</button>'
+      +'</div>';
+
+    container.querySelector('#rt-submit').addEventListener('click', function(){
+      var rtanggal = container.querySelector('#rt-tanggal').value;
+      var rcatatan = container.querySelector('#rt-catatan').value.trim();
+      var rKH = pn((container.querySelector('#rt-kh')  || {value:'0'}).value);
+      var rKL = pn((container.querySelector('#rt-kl')  || {value:'0'}).value);
+      var rB1H= pn((container.querySelector('#rt-b1h') || {value:'0'}).value);
+      var rB1L= pn((container.querySelector('#rt-b1l') || {value:'0'}).value);
+      var rB5H= pn((container.querySelector('#rt-b5h') || {value:'0'}).value);
+      var rB5L= pn((container.querySelector('#rt-b5l') || {value:'0'}).value);
+      var rtErr = container.querySelector('#rt-error');
+
+      if(!rtanggal){ rtErr.textContent='Tanggal wajib diisi.'; rtErr.style.display='block'; return; }
+      if(!rcatatan){ rtErr.textContent='Alasan retur wajib diisi.'; rtErr.style.display='block'; return; }
+      if((rKH+rKL+rB1H+rB1L+rB5H+rB5L) <= 0){ rtErr.textContent='Masukkan qty minimal 1 produk.'; rtErr.style.display='block'; return; }
+      rtErr.style.display='none';
+
+      var submitEl = container.querySelector('#rt-submit');
+      submitEl.disabled = true; submitEl.textContent = 'Menyimpan retur...';
+
+      var payload = {
+        type: 'penjualan-retur',
+        trxRef: t.trxId,
+        tanggal: rtanggal,
+        catatan: rcatatan,
+        keringHighKg: rKH, keringLowKg: rKL,
+        block1kgHigh: rB1H, block1kgLow: rB1L,
+        block5kgHigh: rB5H, block5kgLow: rB5L,
+        operator: '',
+        inputTime: new Date().toISOString()
+      };
+
+      fetch(SHEETS_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(payload)
+      }).then(function(){
+        qs('#pjl-drawer').classList.remove('show');
+        showToast('✅ Retur dicatat! Stok sudah dikembalikan.', 'ok');
+        stokCache = null;
+        renderRiwayat();
+      }).catch(function(e){
+        rtErr.textContent = 'Gagal kirim: '+e;
+        rtErr.style.display='block';
+        submitEl.disabled = false; submitEl.textContent = 'Simpan Retur';
+      });
+    });
   }
 
   // ── Subnav pane switching ─────────────────────────────────
@@ -2887,23 +3041,20 @@ tbody tr:hover td{background:var(--cream);}
 
     // Set tanggal default = hari ini
     var today = new Date();
-    var yyyy = today.getFullYear();
-    var mm   = String(today.getMonth()+1).padStart(2,'0');
-    var dd   = String(today.getDate()).padStart(2,'0');
-    qs('#pjl-tanggal').value = yyyy+'-'+mm+'-'+dd;
+    qs('#pjl-tanggal').value = today.getFullYear()+'-'
+      +String(today.getMonth()+1).padStart(2,'0')+'-'
+      +String(today.getDate()).padStart(2,'0');
 
     // Subnav
     section.querySelectorAll('.subnav-btn').forEach(function(btn){
       btn.addEventListener('click', function(){ switchPane(btn.dataset.pane); });
     });
 
-    // Qty input → live total + hints
-    ['pjl-kering-h','pjl-kering-l','pjl-b1-h','pjl-b1-l',
-     'pjl-b5-h','pjl-b5-l','pjl-harga-kering','pjl-harga-b1','pjl-harga-b5']
-    .forEach(function(id){
-      var el = qs('#'+id);
-      if(el) el.addEventListener('input', updateTotal);
-    });
+    // Inisialisasi tabel produk dengan 1 baris kosong
+    addTableRow();
+
+    // Tombol tambah baris
+    qs('#pjl-add-row').addEventListener('click', function(){ addTableRow(); });
 
     // Submit
     qs('#pjl-submit').addEventListener('click', submitPenjualan);
@@ -2918,8 +3069,8 @@ tbody tr:hover td{background:var(--cream);}
       if(e.target === qs('#pjl-drawer')) qs('#pjl-drawer').classList.remove('show');
     });
 
-    // Load stok saat pertama kali dibuka
-    renderStok();
+    // Tab aktif default adalah Input → load stok mini
+    renderStokMini();
   }
 
   // Tunggu VSK global ready
