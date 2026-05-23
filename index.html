@@ -498,6 +498,10 @@ tbody tr:hover td{background:var(--cream);}
 .retur-form-title{font-size:13px;font-weight:700;color:#c5460a;margin-bottom:10px;}
 .retur-form .grid2{margin-top:8px;}
 .tbl-status.submitted{background:var(--leaf-bg);color:var(--leaf);}
+/* Tombol WA laporan */
+.pjl-wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:18px;padding:13px 16px;background:#25D366;color:white;border:none;border-radius:var(--r);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;}
+.pjl-wa-btn:hover{background:#1da851;}
+.pjl-wa-btn:disabled{opacity:.6;cursor:default;}
 
 /* ═══════════════════════════════════════════════════════════
    RESPONSIVE — collapse sidebar pada layar sempit
@@ -1084,6 +1088,13 @@ tbody tr:hover td{background:var(--cream);}
     </div>
     <div id="pjl-rekap-content">
       <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat rekap...</div></div>
+    </div>
+
+    <div style="padding:4px 0 8px;">
+      <button class="pjl-wa-btn" id="pjl-wa-btn" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Salin laporan untuk WhatsApp
+      </button>
     </div>
   </div>
 
@@ -3035,6 +3046,95 @@ tbody tr:hover td{background:var(--cream);}
     if(pane === 'riwayat') renderRiwayat();
   }
 
+  // ── Laporan WhatsApp ─────────────────────────────────────
+  function salinLaporanWA(){
+    var btn = document.getElementById('pjl-wa-btn');
+    var originalHTML = btn ? btn.innerHTML : '';
+    if(btn){ btn.textContent = '⏳ Memuat...'; btn.disabled = true; }
+
+    fetch(SHEETS_URL + '?action=penjualan-riwayat')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(btn){ btn.disabled = false; btn.innerHTML = originalHTML; }
+        if(!d.ok || !d.transaksi){ showToast('Gagal memuat data penjualan.'); return; }
+
+        // Filter: hari ini + submitted + bukan retur
+        var today = new Date();
+        var todayStr = today.getFullYear()+'-'
+          +String(today.getMonth()+1).padStart(2,'0')+'-'
+          +String(today.getDate()).padStart(2,'0');
+
+        var txToday = d.transaksi.filter(function(t){
+          return t.tanggal === todayStr
+            && t.status === 'submitted'
+            && (t.jenis||'penjualan') !== 'retur';
+        });
+
+        // Tanggal human-readable Bahasa Indonesia
+        var daysId   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        var monthsId = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        var dateLabel = daysId[today.getDay()]+', '+today.getDate()+' '+monthsId[today.getMonth()]+' '+today.getFullYear();
+
+        var lines = [];
+        lines.push('📦 *Laporan Penjualan VSK*');
+        lines.push('📅 ' + dateLabel);
+        lines.push('');
+
+        if(txToday.length === 0){
+          lines.push('_Belum ada penjualan tercatat hari ini._');
+        } else {
+          var totalNilaiHari = 0;
+          txToday.forEach(function(t, i){
+            lines.push('*' + (i+1) + '. ' + t.buyer + '*');
+            var inv = t.nomorInvoice || t.nomorPO || '—';
+            lines.push('   📋 Invoice: ' + inv + ' | DO: ' + (t.nomorDO||'—'));
+            var produk = [];
+            if(t.keringHighKg > 0) produk.push('Kering High: ' + Number(t.keringHighKg).toFixed(2) + ' kg');
+            if(t.keringLowKg  > 0) produk.push('Kering Low: '  + Number(t.keringLowKg).toFixed(2)  + ' kg');
+            if(t.block1kgHigh > 0) produk.push('Block 1kg High: ' + t.block1kgHigh + ' pcs');
+            if(t.block1kgLow  > 0) produk.push('Block 1kg Low: '  + t.block1kgLow  + ' pcs');
+            if(t.block5kgHigh > 0) produk.push('Block 5kg High: ' + t.block5kgHigh + ' pcs');
+            if(t.block5kgLow  > 0) produk.push('Block 5kg Low: '  + t.block5kgLow  + ' pcs');
+            if(produk.length) lines.push('   📦 ' + produk.join(', '));
+            if(t.totalNilai > 0){
+              lines.push('   💰 ' + fmtRp(t.totalNilai));
+              totalNilaiHari += Number(t.totalNilai);
+            }
+            if((t.jenis||'penjualan') === 'sample') lines.push('   _(Sample shipment)_');
+            if(t.catatan) lines.push('   📝 ' + t.catatan);
+            lines.push('');
+          });
+          lines.push('─────────────────');
+          lines.push('*Total transaksi: ' + txToday.length + '*');
+          if(totalNilaiHari > 0) lines.push('*Total nilai: ' + fmtRp(totalNilaiHari) + '*');
+        }
+
+        lines.push('');
+        lines.push('_VSK Sistem — Varian Sumber Karya_');
+
+        if(window.VSK && window.VSK.IS_STAGING){
+          lines.push('');
+          lines.push('~-Staging-~');
+        }
+
+        var text = lines.join('\n');
+        var waUrl = 'https://chat.whatsapp.com/EeSQDxBgU2yJvMyrne09v9?mode=gi_t';
+
+        navigator.clipboard.writeText(text).then(function(){
+          showToast('✅ Laporan disalin! Paste di grup WhatsApp.');
+          window.open(waUrl, '_blank');
+        }).catch(function(){
+          // Fallback: buka grup saja, user paste manual
+          showToast('Buka WhatsApp dan paste laporan secara manual.');
+          window.open(waUrl, '_blank');
+        });
+      })
+      .catch(function(){
+        if(btn){ btn.disabled = false; btn.innerHTML = originalHTML; }
+        showToast('Gagal memuat data penjualan.');
+      });
+  }
+
   // ── Init ──────────────────────────────────────────────────
   function init(){
     SHEETS_URL = window.VSK.SHEETS_URL;
@@ -3062,6 +3162,9 @@ tbody tr:hover td{background:var(--cream);}
     // Refresh buttons
     document.getElementById('pjl-refresh-stok').addEventListener('click', function(){ stokCache=null; renderStok(); });
     document.getElementById('pjl-refresh-riwayat').addEventListener('click', renderRiwayat);
+
+    // Tombol WA laporan
+    document.getElementById('pjl-wa-btn').addEventListener('click', salinLaporanWA);
 
     // Drawer close
     qs('#pjl-dr-close').addEventListener('click', function(){ qs('#pjl-drawer').classList.remove('show'); });

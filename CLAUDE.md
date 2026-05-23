@@ -27,7 +27,7 @@
 
 Monorepo gabungan modul **Produksi** + **Bahan Baku**, live di Cloudflare Workers.
 
-**Schema version:** v9.2 (v8: EC split 2026-05-03; v9: Modul Penjualan + tab `Output_Penjualan`, 2026-05-21; v9.2: harga per EC type (6 field), rename Invoice, line-item table UI, fix POST Content-Type, 2026-05-22)
+**Schema version:** v9.3 (v8: EC split 2026-05-03; v9: Modul Penjualan + tab `Output_Penjualan`, 2026-05-21; v9.2: harga per EC type (6 field), rename Invoice, line-item table UI, fix POST Content-Type, 2026-05-22; v9.3: post-submit switch ke Stok tab, tombol "Salin laporan untuk WhatsApp", staging indicator di WA report, 2026-05-23)
 
 **Repo:** https://github.com/tevepees/vsk-sistem
 **Branches:** `main` (production) + `staging`
@@ -358,7 +358,7 @@ npx wrangler deploy --env production
 
 ---
 
-## Last Session Summary (2026-05-22)
+## Last Session Summary (2026-05-23)
 
 Implementasi Modul Penjualan (v9) — selesai:
 - `docs/PRD-Penjualan.md` — PRD lengkap modul Penjualan v1.0 (schema, endpoints, user stories, open questions)
@@ -367,7 +367,7 @@ Implementasi Modul Penjualan (v9) — selesai:
 - `index.html` — sidebar + CSS + HTML section + IIFE modul Penjualan lengkap (stok card, form input, riwayat + cancel drawer)
 - `CLAUDE.md` — updated ke v9
 
-**Status:** v9.2 siap untuk staging deploy. Production masih di v8.
+**Status:** v9.3 siap untuk staging deploy. Production masih di v8.
 
 **Penambahan v9.1 (session 2026-05-21 lanjutan) — OQ resolved:**
 - `Jenis` (col 24→27) + `TRX Referensi` (col 25→28) ditambah ke schema Output_Penjualan
@@ -382,10 +382,20 @@ Implementasi Modul Penjualan (v9) — selesai:
 4. **Harga per EC type**: Schema extend dari 3 harga (per produk) → 6 harga (per produk × EC type). Payload fields: `hargaKeringHigh`, `hargaKeringLow`, `hargaBlock1kgHigh`, `hargaBlock1kgLow`, `hargaBlock5kgHigh`, `hargaBlock5kgLow`
 5. **Bug fix critical**: Data tidak masuk DB karena `Content-Type: application/json` tidak boleh dipakai dengan `mode: no-cors` → fix ke `text/plain;charset=utf-8` (3 fetch: submit, cancel, retur)
 
-**Deploy checklist v9.2 (staging dulu):**
+**Improvement v9.3 (session 2026-05-23):**
+1. **Post-submit redirect**: Setelah submit berhasil → langsung pindah ke tab "Stok Tersedia" + `renderStok()` (sudah ada dari v9.2)
+2. **Tombol WA laporan**: Di tab "Stok Tersedia" — tombol hijau "Salin laporan untuk WhatsApp"
+   - Fetch `penjualan-riwayat` → filter hari ini + status='submitted' + bukan retur
+   - Format report Bahasa Indonesia (nama buyer, produk, nilai, total)
+   - Kalau `IS_STAGING` → append `~-Staging-~` di dalam teks WA report
+   - Copy ke clipboard → toast "✅ Laporan disalin! Paste di grup WhatsApp."
+   - Buka grup WA: `https://chat.whatsapp.com/EeSQDxBgU2yJvMyrne09v9?mode=gi_t`
+
+**Deploy checklist v9.3 (staging dulu):**
 1. Paste `VSK_AppsScript_v9.js` ke Apps Script **staging** → Deploy new version
 2. Run `migratePenjualan()` di Apps Script editor (1x, idempotent — buat tab Output_Penjualan + set header)
 3. `npx wrangler deploy --env staging` → test di staging URL
-4. Test flow: input penjualan dengan multi-baris (Kering High + Block 1kg Low) → pastikan masuk DB → cek rekap stok
+4. Test flow: input penjualan → setelah submit langsung pindah ke Stok Tersedia
+5. Test tombol WA: klik "Salin laporan" → cek clipboard → cek staging text muncul di teks WA (bukan di UI)
 
 **Next critical (tetap):** NC-G (pengeringan gagal carry-over) + spreadsheet protection (NC-2.3).
