@@ -27,7 +27,7 @@
 
 Monorepo gabungan modul **Produksi** + **Bahan Baku**, live di Cloudflare Workers.
 
-**Schema version:** v9.3 (v8: EC split 2026-05-03; v9: Modul Penjualan + tab `Output_Penjualan`, 2026-05-21; v9.2: harga per EC type (6 field), rename Invoice, line-item table UI, fix POST Content-Type, 2026-05-22; v9.3: post-submit switch ke Stok tab, tombol "Salin laporan untuk WhatsApp", staging indicator di WA report, 2026-05-23)
+**Schema version:** v9.4 (v8: EC split 2026-05-03; v9: Modul Penjualan + tab `Output_Penjualan`, 2026-05-21; v9.2: harga per EC type (6 field), rename Invoice, line-item table UI, fix POST Content-Type, 2026-05-22; v9.3: post-submit switch ke Stok tab, tombol "Salin laporan untuk WhatsApp", staging indicator di WA report, 2026-05-23; v9.4: WA footer confidential beda staging/prod, hapus stok mini dari tab Input, 2026-05-23)
 
 **Repo:** https://github.com/tevepees/vsk-sistem
 **Branches:** `main` (production) + `staging`

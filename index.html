@@ -1101,17 +1101,8 @@ tbody tr:hover td{background:var(--cream);}
   <!-- ── PAGE: Input Penjualan ── -->
   <div class="page active" data-pane="input" id="pjl-page-input">
 
-    <!-- Info stok mini -->
-    <div class="sec">
-      <span class="sec-title">Stok saat ini</span>
-      <div class="sec-line"></div>
-    </div>
-    <div id="pjl-input-stok-mini">
-      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat...</div></div>
-    </div>
-
     <!-- Form -->
-    <div class="sec" style="margin-top:18px;">
+    <div class="sec" style="margin-top:8px;">
       <span class="sec-title">Data transaksi</span>
       <div class="sec-line"></div>
     </div>
@@ -2584,24 +2575,10 @@ tbody tr:hover td{background:var(--cream);}
   }
 
   // ── Render: stok mini di halaman input ────────────────────
+  // Prefetch stok ke cache supaya row hints langsung tersedia di form input
   function renderStokMini(){
-    var el = document.getElementById('pjl-input-stok-mini');
     fetchStok(function(d){
-      if(!d.ok){ el.innerHTML=''; return; }
-      var s = d.saldo;
-      el.innerHTML =
-        '<div class="stok-grid" style="margin-bottom:14px;">'
-        +'<div class="stok-cell high-border"><div class="st-label">Kering H</div><div class="st-val">'+s.keringHighKg.toFixed(2)+'<span class="st-unit">kg</span></div></div>'
-        +'<div class="stok-cell low-border"><div class="st-label">Kering L</div><div class="st-val">'+s.keringLowKg.toFixed(2)+'<span class="st-unit">kg</span></div></div>'
-        +'<div></div>'
-        +'<div class="stok-cell high-border"><div class="st-label">B1kg H</div><div class="st-val">'+s.block1kgHigh+'<span class="st-unit">pcs</span></div></div>'
-        +'<div class="stok-cell low-border"><div class="st-label">B1kg L</div><div class="st-val">'+s.block1kgLow+'<span class="st-unit">pcs</span></div></div>'
-        +'<div></div>'
-        +'<div class="stok-cell high-border"><div class="st-label">B5kg H</div><div class="st-val">'+s.block5kgHigh+'<span class="st-unit">pcs</span></div></div>'
-        +'<div class="stok-cell low-border"><div class="st-label">B5kg L</div><div class="st-val">'+s.block5kgLow+'<span class="st-unit">pcs</span></div></div>'
-        +'<div></div>'
-        +'</div>';
-      updateAllRowHints();
+      if(d.ok) updateAllRowHints();
     });
   }
 
@@ -3110,11 +3087,15 @@ tbody tr:hover td{background:var(--cream);}
         }
 
         lines.push('');
-        lines.push('_VSK Sistem — Varian Sumber Karya_');
-
         if(window.VSK && window.VSK.IS_STAGING){
-          lines.push('');
-          lines.push('~-Staging-~');
+          lines.push('*Confidential VSK Production System Report.*');
+          lines.push('*It is prohibited to disseminate this information unless written approval is obtained from VSK management.*');
+          lines.push('*©️All Right Reserved PT Varian Sumber Karya®️*');
+          lines.push('_Staging_');
+        } else {
+          lines.push('*Confidential VSK Selling System Report.*');
+          lines.push('*It is prohibited to disseminate this information unless written approval is obtained from VSK management.*');
+          lines.push('*©️All Right Reserved PT Varian Sumber Karya®️*');
         }
 
         var text = lines.join('\n');
