@@ -893,11 +893,16 @@
     }
   };
 
-  // Eager init biar handler & query sudah ready (init idempotent)
+  // Eager init — di multi-page, onActivate tidak dipanggil shell,
+  // jadi loadActiveBatch() harus dipanggil langsung saat halaman dibuka.
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function(){
+      init();
+      loadActiveBatch();
+    });
   } else {
     init();
+    loadActiveBatch();
   }
 })();
 
