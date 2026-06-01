@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#faf8f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="VSK Penjualan">
+<link rel="manifest" href="/manifest.json">
+<title>VSK — Penjualan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="side-brand">
+    <a href="/"><img src="/logo.svg" alt="VSK" class="vsk-logo"></a>
+    <div>
+      <div class="side-brand-name">PT Varian Sumber Karya</div>
+      <div class="side-brand-sub">Building Value from Every Source</div>
+    </div>
+  </div>
+
+  <nav class="side-nav">
+    <div class="side-section-title">Modul</div>
+    <a class="side-item" href="/produksi">
+      <span class="side-item-icon">🏭</span>
+      <span>Produksi</span>
+    </a>
+    <a class="side-item" href="/rawmat">
+      <span class="side-item-icon">📦</span>
+      <span>Bahan Baku</span>
+      <span class="side-item-meta" id="side-rawmat-meta" style="display:none">●</span>
+    </a>
+    <a class="side-item" href="/penjualan">
+      <span class="side-item-icon">🛒</span>
+      <span>Penjualan</span>
+    </a>
+  </nav>
+
+  <div class="side-foot">
+    <div class="env-badge" id="env-badge">staging</div>
+    <div class="side-foot-date">
+      <div class="side-foot-day" id="top-day"></div>
+      <div class="side-foot-fulldate" id="top-date"></div>
+    </div>
+  </div>
+</aside>
+
+<main class="content">
+<section class="module active" data-module="penjualan" id="mod-penjualan">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Modul <em>Penjualan</em></div>
+      <div class="topbar-sub">Catat keluar gudang — Kering, Block 1kg, Block 5kg</div>
+    </div>
+  </header>
+
+  <nav class="subnav" id="penjualan-subnav">
+    <button class="subnav-btn active" data-pane="input" type="button">Input Penjualan</button>
+    <button class="subnav-btn" data-pane="stok" type="button">Stok Tersedia</button>
+    <button class="subnav-btn" data-pane="riwayat" type="button">Riwayat</button>
+  </nav>
+
+  <!-- ── PAGE: Stok Tersedia ── -->
+  <div class="page" data-pane="stok" id="pjl-page-stok">
+    <div class="sec">
+      <span class="sec-title">Stok Finished Goods</span>
+      <div class="sec-line"></div>
+      <button class="sec-refresh" id="pjl-refresh-stok" type="button">↻ Refresh</button>
+    </div>
+
+    <div id="pjl-stok-content">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat stok...</div></div>
+    </div>
+
+    <div class="sec" style="margin-top:18px;">
+      <span class="sec-title">Rekap bulan ini</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag" id="pjl-rekap-bulan-label"></span>
+    </div>
+    <div id="pjl-rekap-content">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat rekap...</div></div>
+    </div>
+
+    <div style="padding:4px 0 8px;">
+      <button class="pjl-wa-btn" id="pjl-wa-btn" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Salin laporan untuk WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PAGE: Input Penjualan ── -->
+  <div class="page active" data-pane="input" id="pjl-page-input">
+
+    <!-- Form -->
+    <div class="sec" style="margin-top:8px;">
+      <span class="sec-title">Data transaksi</span>
+      <div class="sec-line"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label class="f-label">Tanggal pengiriman *</label>
+        <div class="f-wrap"><input type="date" id="pjl-tanggal" class="no-unit"></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Buyer / Customer *</label>
+        <div class="f-wrap"><input type="text" id="pjl-buyer" placeholder="Nama buyer" class="no-unit"></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:10px;">
+      <div class="field">
+        <label class="f-label">Nomor Invoice *</label>
+        <div class="f-wrap"><input type="text" id="pjl-po" placeholder="INV-XXXX" class="no-unit"></div>
+      </div>
+      <div class="field">
+        <label class="f-label">Nomor DO / Surat Jalan *</label>
+        <div class="f-wrap"><input type="text" id="pjl-do" placeholder="DO-XXXX" class="no-unit"></div>
+      </div>
+    </div>
+
+    <!-- Produk yang dijual — line-item table -->
+    <div class="sec" style="margin-top:18px;">
+      <span class="sec-title">Produk yang dijual</span>
+      <div class="sec-line"></div>
+    </div>
+
+    <div class="pjl-line-wrap">
+      <table class="pjl-line-table">
+        <thead>
+          <tr>
+            <th style="width:35%">Produk</th>
+            <th style="width:18%">Type EC</th>
+            <th style="width:22%">Qty</th>
+            <th style="width:20%">Harga/unit (IDR)</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="pjl-line-tbody">
+          <!-- rows ditambah via JS addTableRow() -->
+        </tbody>
+      </table>
+      <button class="pjl-add-row-btn" id="pjl-add-row" type="button">+ Tambah baris produk</button>
+    </div>
+
+    <!-- Total nilai preview -->
+    <div class="hero" style="margin-top:14px;padding:14px 18px;">
+      <div class="hero-label">Total nilai penjualan</div>
+      <div class="hero-val" id="pjl-total-preview"><sup>Rp</sup>0</div>
+    </div>
+    <!-- Sample shipment indicator -->
+    <div id="pjl-sample-indicator">⚠️ Sample Shipment — semua harga 0. Batas: max 2 pcs Block, max 5 kg Kering.</div>
+
+    <!-- Catatan -->
+    <div class="field" style="margin-top:10px;">
+      <label class="f-label">Catatan (opsional)</label>
+      <div class="f-wrap"><textarea id="pjl-catatan" placeholder="Catatan tambahan..."></textarea></div>
+    </div>
+
+    <button class="btn-main" id="pjl-submit" type="button">Simpan Penjualan</button>
+
+    <div id="pjl-form-error" style="display:none;margin-top:10px;padding:10px 14px;background:var(--rose-bg);border-radius:var(--r);font-size:13px;color:var(--rose);"></div>
+  </div>
+
+  <!-- ── PAGE: Riwayat ── -->
+  <div class="page" data-pane="riwayat" id="pjl-page-riwayat">
+    <div class="sec">
+      <span class="sec-title">Riwayat transaksi</span>
+      <div class="sec-line"></div>
+      <button class="sec-refresh" id="pjl-refresh-riwayat" type="button">↻ Refresh</button>
+    </div>
+
+    <div id="pjl-riwayat-content">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>
+    </div>
+
+    <!-- Drawer detail + cancel -->
+    <div class="drawer" id="pjl-drawer">
+      <div class="drawer-panel">
+        <div class="drawer-head">
+          <div class="drawer-title" id="pjl-dr-title">Detail transaksi</div>
+          <button class="drawer-close" id="pjl-dr-close" type="button">×</button>
+        </div>
+        <div class="drawer-body" id="pjl-dr-body"></div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var SHEETS_URL_STAGING = 'https://script.google.com/macros/s/AKfycbxdpYmv3AUqcS0P7Lv-3LRYBV4nDoscDSfcupsN0UwvQt01E0Z3-YLwuLglY9iILGkl/exec';
+  var SHEETS_URL_PROD    = 'https://script.google.com/macros/s/AKfycbw3pWXUCvStevJLIA2x1r7n39Hb2UrCNYuGzwUbzLVpMtyd_ICBMS8RLR3ZqLo9_PqRaw/exec';
+
+  var IS_STAGING = location.hostname.indexOf('staging') !== -1
+                || location.hostname.indexOf('localhost') !== -1
+                || location.hostname.indexOf('127.0.0.1') !== -1;
+
+  window.VSK = {
+    SHEETS_URL: IS_STAGING ? SHEETS_URL_STAGING : SHEETS_URL_PROD,
+    IS_STAGING: IS_STAGING,
+    $: function(id){ return document.getElementById(id); },
+    qs: function(sel, root){ return (root || document).querySelector(sel); },
+    qsa: function(sel, root){ return (root || document).querySelectorAll(sel); },
+    toast: function(msg, kind){
+      var el = document.getElementById('toast');
+      if(!el) return;
+      el.textContent = msg;
+      el.className = 'toast ' + (kind || '') + ' show';
+      setTimeout(function(){ el.className = 'toast ' + (kind || ''); }, 2400);
+    },
+    todayStr: function(){
+      return new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Jakarta'});
+    },
+    modules: {}
+  };
+
+  function initShell(){
+    var d = new Date();
+    var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    var mos  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    var dayEl  = document.getElementById('top-day');
+    var dateEl = document.getElementById('top-date');
+    if(dayEl)  dayEl.textContent  = days[d.getDay()];
+    if(dateEl) dateEl.textContent = d.getDate() + ' ' + mos[d.getMonth()] + ' ' + d.getFullYear();
+
+    if(IS_STAGING){
+      var badge = document.getElementById('env-badge');
+      if(badge) badge.classList.add('show');
+    }
+
+    var path = location.pathname.replace(/\/\/$/, '') || '/';
+    var sideItems = document.querySelectorAll('a.side-item');
+    for(var i=0; i<sideItems.length; i++){
+      var href = sideItems[i].getAttribute('href') || '';
+      sideItems[i].classList.toggle('active', href === path);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initShell);
+  } else {
+    initShell();
+  }
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }
+})();
+
+(function(){
+  'use strict';
+
+  var section = document.getElementById('mod-penjualan');
+  var SHEETS_URL = null; // set saat init
+
+  // ── Helpers ───────────────────────────────────────────────
+  function qs(sel){ return section.querySelector(sel); }
+  function fmtRp(n){ return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+  function fmtKg(n){ return parseFloat(n).toFixed(2) + ' kg'; }
+  function pn(v){ var x=parseFloat(v); return isNaN(x)?0:x; }
+
+  function showToast(msg, type){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type||'');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(function(){ t.className='toast'; }, 2800);
+  }
+
+  function showErr(msg){
+    var el = qs('#pjl-form-error');
+    if(el){ el.style.display = msg ? 'block' : 'none'; el.textContent = msg||''; }
+  }
+
+  // ── State ──────────────────────────────────────────────────
+  var stokCache = null;  // cache stok untuk validasi & hints
+
+  // ── Fetch stok finished goods ─────────────────────────────
+  function fetchStok(cb){
+    fetch(SHEETS_URL + '?action=penjualan-stock')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.ok){ stokCache = d.saldo; }
+        if(cb) cb(d);
+      })
+      .catch(function(e){ if(cb) cb({ok:false,error:String(e)}); });
+  }
+
+  // ── Render: halaman Stok ───────────────────────────────────
+  function renderStok(){
+    var el = document.getElementById('pjl-stok-content');
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat stok...</div></div>';
+
+    fetchStok(function(d){
+      if(!d.ok){
+        el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-p">Gagal memuat: '+d.error+'</div></div>';
+        return;
+      }
+      var s = d.saldo;
+      function cell(label, val, unit, isHigh, isNeg){
+        var cls = 'stok-cell ' + (isHigh ? 'high-border' : 'low-border');
+        var negCls = isNeg ? ' neg' : '';
+        return '<div class="'+cls+'"><div class="st-label">'+label+'</div>'
+          +'<div class="st-val'+negCls+'">'+val+'<span class="st-unit">'+unit+'</span></div></div>';
+      }
+      el.innerHTML =
+        '<div class="sec-hint">Produk siap kirim di gudang, real-time dari data produksi dikurangi penjualan.</div>'
+        +'<div class="stok-grid">'
+        + cell('Kering · High EC', s.keringHighKg.toFixed(2), 'kg', true,  s.keringHighKg<0)
+        + cell('Kering · Low EC',  s.keringLowKg.toFixed(2),  'kg', false, s.keringLowKg<0)
+        + '<div></div>'
+        + cell('Block 1kg · High', s.block1kgHigh, 'pcs', true,  s.block1kgHigh<0)
+        + cell('Block 1kg · Low',  s.block1kgLow,  'pcs', false, s.block1kgLow<0)
+        + '<div></div>'
+        + cell('Block 5kg · High', s.block5kgHigh, 'pcs', true,  s.block5kgHigh<0)
+        + cell('Block 5kg · Low',  s.block5kgLow,  'pcs', false, s.block5kgLow<0)
+        + '<div></div>'
+        +'</div>';
+    });
+
+    // Rekap bulan ini
+    var today = new Date();
+    var bulan = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+    document.getElementById('pjl-rekap-bulan-label').textContent = bulan;
+    fetchRekap(bulan);
+  }
+
+  function fetchRekap(bulan){
+    var el = document.getElementById('pjl-rekap-content');
+    fetch(SHEETS_URL + '?action=penjualan-rekap&bulan=' + bulan)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.ok){ el.innerHTML='<div class="empty"><div class="empty-p">Gagal memuat rekap.</div></div>'; return; }
+        if(d.totalTransaksi === 0){
+          el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-h">Belum ada penjualan bulan ini</div></div>';
+          return;
+        }
+        var v = d.volume;
+        el.innerHTML =
+          '<div class="hero" style="margin-bottom:10px;">'
+          +'<div class="hero-label">Total nilai penjualan — '+bulan+' ('+d.totalTransaksi+' transaksi, '+d.buyerCount+' buyer)</div>'
+          +'<div class="hero-val"><sup>Rp</sup>'+Number(d.totalNilai).toLocaleString('id-ID')+'</div>'
+          +'</div>'
+          +'<div class="stok-grid">'
+          +'<div class="stok-cell high-border"><div class="st-label">Kering High</div><div class="st-val">'+v.keringHighKg.toFixed(2)+'<span class="st-unit">kg</span></div></div>'
+          +'<div class="stok-cell low-border"><div class="st-label">Kering Low</div><div class="st-val">'+v.keringLowKg.toFixed(2)+'<span class="st-unit">kg</span></div></div>'
+          +'<div></div>'
+          +'<div class="stok-cell high-border"><div class="st-label">Block 1kg High</div><div class="st-val">'+v.block1kgHigh+'<span class="st-unit">pcs</span></div></div>'
+          +'<div class="stok-cell low-border"><div class="st-label">Block 1kg Low</div><div class="st-val">'+v.block1kgLow+'<span class="st-unit">pcs</span></div></div>'
+          +'<div></div>'
+          +'<div class="stok-cell high-border"><div class="st-label">Block 5kg High</div><div class="st-val">'+v.block5kgHigh+'<span class="st-unit">pcs</span></div></div>'
+          +'<div class="stok-cell low-border"><div class="st-label">Block 5kg Low</div><div class="st-val">'+v.block5kgLow+'<span class="st-unit">pcs</span></div></div>'
+          +'<div></div>'
+          +'</div>';
+      })
+      .catch(function(){ el.innerHTML='<div class="empty"><div class="empty-p">Gagal memuat rekap.</div></div>'; });
+  }
+
+  // ── Render: stok mini di halaman input ────────────────────
+  // Prefetch stok ke cache supaya row hints langsung tersedia di form input
+  function renderStokMini(){
+    fetchStok(function(d){
+      if(d.ok) updateAllRowHints();
+    });
+  }
+
+  // ── Table row management ───────────────────────────────────
+  function addTableRow(product, ec, qty, harga){
+    var tbody = qs('#pjl-line-tbody');
+    var tr = document.createElement('tr');
+    tr.className = 'pjl-line-row';
+    tr.innerHTML =
+      '<td>'
+      +'<select class="pjl-line-select pjl-line-product">'
+      +'<option value="">— Pilih produk —</option>'
+      +'<option value="kering">Kering curah</option>'
+      +'<option value="block1kg">Block 1kg</option>'
+      +'<option value="block5kg">Block 5kg</option>'
+      +'<option value="basah" disabled>Basah curah ⏳</option>'
+      +'</select>'
+      +'</td>'
+      +'<td>'
+      +'<select class="pjl-line-select pjl-line-ec">'
+      +'<option value="high">High EC</option>'
+      +'<option value="low">Low EC</option>'
+      +'</select>'
+      +'</td>'
+      +'<td style="white-space:nowrap;">'
+      +'<input type="number" class="pjl-line-input pjl-line-qty" min="0" step="0.01" placeholder="0" style="width:70px;">'
+      +'<span class="pjl-line-unit">—</span>'
+      +'<span class="pjl-line-hint"></span>'
+      +'</td>'
+      +'<td>'
+      +'<input type="number" class="pjl-line-input pjl-line-harga" min="0" step="100" placeholder="0">'
+      +'</td>'
+      +'<td style="text-align:center;">'
+      +'<button class="pjl-del-btn" type="button" title="Hapus baris">✕</button>'
+      +'</td>';
+    tbody.appendChild(tr);
+
+    var selProd  = tr.querySelector('.pjl-line-product');
+    var selEc    = tr.querySelector('.pjl-line-ec');
+    var inpQty   = tr.querySelector('.pjl-line-qty');
+    var inpHarga = tr.querySelector('.pjl-line-harga');
+
+    if(product) selProd.value  = product;
+    if(ec)      selEc.value    = ec;
+    if(qty)     inpQty.value   = qty;
+    if(harga)   inpHarga.value = harga;
+
+    updateRowUnit(tr);
+
+    tr.querySelector('.pjl-del-btn').addEventListener('click', function(){
+      var allRows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+      if(allRows.length <= 1){
+        selProd.value = ''; selEc.value = 'high';
+        inpQty.value = ''; inpHarga.value = '';
+        updateRowUnit(tr); updateRowHint(tr); updateTotal();
+        return;
+      }
+      tr.parentNode.removeChild(tr);
+      updateTotal();
+    });
+
+    selProd.addEventListener('change', function(){ updateRowUnit(tr); updateRowHint(tr); updateTotal(); });
+    selEc.addEventListener('change',   function(){ updateRowHint(tr); updateTotal(); });
+    inpQty.addEventListener('input',   function(){ updateRowHint(tr); updateTotal(); });
+    inpHarga.addEventListener('input', updateTotal);
+    return tr;
+  }
+
+  function updateRowUnit(tr){
+    var product = tr.querySelector('.pjl-line-product').value;
+    var unitEl  = tr.querySelector('.pjl-line-unit');
+    var inpQty  = tr.querySelector('.pjl-line-qty');
+    if(product === 'kering' || product === 'basah'){
+      unitEl.textContent = 'kg'; inpQty.step = '0.01';
+    } else if(product === 'block1kg' || product === 'block5kg'){
+      unitEl.textContent = 'pcs'; inpQty.step = '1';
+    } else {
+      unitEl.textContent = '—';
+    }
+  }
+
+  function updateRowHint(tr){
+    var product = tr.querySelector('.pjl-line-product').value;
+    var ec      = tr.querySelector('.pjl-line-ec').value;
+    var qty     = pn(tr.querySelector('.pjl-line-qty').value);
+    var hintEl  = tr.querySelector('.pjl-line-hint');
+    if(!stokCache || !product){ hintEl.textContent = ''; return; }
+    var avail = 0, unit = '';
+    if(product==='kering'   && ec==='high'){ avail=stokCache.keringHighKg; unit='kg';  }
+    else if(product==='kering'   && ec==='low') { avail=stokCache.keringLowKg;  unit='kg';  }
+    else if(product==='block1kg' && ec==='high'){ avail=stokCache.block1kgHigh; unit='pcs'; }
+    else if(product==='block1kg' && ec==='low') { avail=stokCache.block1kgLow;  unit='pcs'; }
+    else if(product==='block5kg' && ec==='high'){ avail=stokCache.block5kgHigh; unit='pcs'; }
+    else if(product==='block5kg' && ec==='low') { avail=stokCache.block5kgLow;  unit='pcs'; }
+    else { hintEl.textContent=''; return; }
+    if(qty > avail){
+      hintEl.textContent = '⚠ Stok: '+avail+' '+unit;
+      hintEl.className = 'pjl-line-hint over';
+    } else {
+      hintEl.textContent = 'Stok: '+avail+' '+unit;
+      hintEl.className = 'pjl-line-hint';
+    }
+  }
+
+  function updateAllRowHints(){
+    qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row').forEach(updateRowHint);
+  }
+
+  // ── Live total preview ─────────────────────────────────────
+  function updateTotal(){
+    var rows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+    var total = 0, hasQty = false, allZeroHarga = true;
+    rows.forEach(function(tr){
+      var qty   = pn(tr.querySelector('.pjl-line-qty').value);
+      var harga = pn(tr.querySelector('.pjl-line-harga').value);
+      total += qty * harga;
+      if(qty > 0) hasQty = true;
+      if(harga > 0) allZeroHarga = false;
+    });
+    qs('#pjl-total-preview').innerHTML = '<sup>Rp</sup>' + Number(total).toLocaleString('id-ID');
+    var ind = qs('#pjl-sample-indicator');
+    if(ind) ind.style.display = (hasQty && allZeroHarga) ? 'block' : 'none';
+  }
+
+  // ── Submit penjualan ──────────────────────────────────────
+  function submitPenjualan(){
+    showErr('');
+    var tanggal = qs('#pjl-tanggal').value;
+    var buyer   = qs('#pjl-buyer').value.trim();
+    var invoice = qs('#pjl-po').value.trim();
+    var doNum   = qs('#pjl-do').value.trim();
+    if(!tanggal) { showErr('Tanggal wajib diisi.'); return; }
+    if(!buyer)   { showErr('Nama buyer wajib diisi.'); return; }
+    if(!invoice) { showErr('Nomor Invoice wajib diisi.'); return; }
+    if(!doNum)   { showErr('Nomor DO/Surat Jalan wajib diisi.'); return; }
+
+    // Kumpulkan data dari tabel baris produk
+    var rows = qs('#pjl-line-tbody').querySelectorAll('.pjl-line-row');
+    var keringH=0, keringL=0, b1H=0, b1L=0, b5H=0, b5L=0;
+    var hKH=0, hKL=0, hB1H=0, hB1L=0, hB5H=0, hB5L=0;
+    rows.forEach(function(tr){
+      var product = tr.querySelector('.pjl-line-product').value;
+      var ec      = tr.querySelector('.pjl-line-ec').value;
+      var qty     = pn(tr.querySelector('.pjl-line-qty').value);
+      var harga   = pn(tr.querySelector('.pjl-line-harga').value);
+      if(!product || qty <= 0) return;
+      if(product==='kering'   && ec==='high'){ keringH+=qty; hKH=harga; }
+      if(product==='kering'   && ec==='low') { keringL+=qty; hKL=harga; }
+      if(product==='block1kg' && ec==='high'){ b1H+=qty;     hB1H=harga; }
+      if(product==='block1kg' && ec==='low') { b1L+=qty;     hB1L=harga; }
+      if(product==='block5kg' && ec==='high'){ b5H+=qty;     hB5H=harga; }
+      if(product==='block5kg' && ec==='low') { b5L+=qty;     hB5L=harga; }
+    });
+    var totalQty = keringH + keringL + b1H + b1L + b5H + b5L;
+    if(totalQty <= 0){ showErr('Minimal 1 baris produk dengan qty > 0.'); return; }
+
+    var btn = qs('#pjl-submit');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+    var payload = {
+      type: 'penjualan-save',
+      tanggal: tanggal, buyer: buyer,
+      nomorInvoice: invoice, nomorDO: doNum,
+      keringHighKg: keringH, keringLowKg: keringL,
+      block1kgHigh: b1H, block1kgLow: b1L,
+      block5kgHigh: b5H, block5kgLow: b5L,
+      hargaKeringHigh: hKH, hargaKeringLow: hKL,
+      hargaBlock1kgHigh: hB1H, hargaBlock1kgLow: hB1L,
+      hargaBlock5kgHigh: hB5H, hargaBlock5kgLow: hB5L,
+      catatan: qs('#pjl-catatan').value.trim(),
+      operator: '',
+      inputTime: new Date().toISOString()
+    };
+
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    })
+    .then(function(){
+      // no-cors = buta, anggap sukses, tunggu konfirmasi dari stok baru
+      showToast('✅ Penjualan tersimpan!', 'ok');
+      resetForm();
+      btn.disabled = false; btn.textContent = 'Simpan Penjualan';
+      stokCache = null;
+      // Pindah ke tab stok untuk konfirmasi visual
+      switchPane('stok');
+      renderStok();
+    })
+    .catch(function(e){
+      showErr('Gagal kirim data: ' + e);
+      btn.disabled = false; btn.textContent = 'Simpan Penjualan';
+    });
+  }
+
+  function resetForm(){
+    ['pjl-tanggal','pjl-buyer','pjl-po','pjl-do','pjl-catatan']
+    .forEach(function(id){ var el=qs('#'+id); if(el) el.value=''; });
+    // Reset tabel ke 1 baris kosong
+    var tbody = qs('#pjl-line-tbody');
+    tbody.innerHTML = '';
+    addTableRow();
+    qs('#pjl-total-preview').innerHTML = '<sup>Rp</sup>0';
+    showErr('');
+    // Restore default date
+    var today = new Date();
+    qs('#pjl-tanggal').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  }
+
+  // ── Riwayat ───────────────────────────────────────────────
+  function renderRiwayat(){
+    var el = document.getElementById('pjl-riwayat-content');
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>';
+
+    fetch(SHEETS_URL + '?action=penjualan-riwayat')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.ok){ el.innerHTML='<div class="empty"><div class="empty-p">Gagal memuat riwayat.</div></div>'; return; }
+        if(!d.transaksi || d.transaksi.length === 0){
+          el.innerHTML='<div class="empty"><div class="empty-icon">🛒</div><div class="empty-h">Belum ada transaksi penjualan</div></div>';
+          return;
+        }
+        var html = '<div class="riwayat-stack">';
+        d.transaksi.forEach(function(t){
+          var statusCls = t.status === 'submitted' ? 'submitted' : 'cancelled';
+          var statusLabel = t.status === 'submitted' ? 'Submit' : 'Cancel';
+          var jenis = t.jenis || 'penjualan';
+          var jenisBadge = '';
+          if(jenis === 'sample') jenisBadge = '<span class="jenis-badge sample">Sample</span>';
+          else if(jenis === 'retur') jenisBadge = '<span class="jenis-badge retur">Retur</span>';
+          var produkLines = [];
+          if(t.keringHighKg > 0) produkLines.push('<span>Kering H: <strong>'+t.keringHighKg.toFixed(2)+' kg</strong></span>');
+          if(t.keringLowKg  > 0) produkLines.push('<span>Kering L: <strong>'+t.keringLowKg.toFixed(2)+' kg</strong></span>');
+          if(t.block1kgHigh > 0) produkLines.push('<span>Block 1kg H: <strong>'+t.block1kgHigh+' pcs</strong></span>');
+          if(t.block1kgLow  > 0) produkLines.push('<span>Block 1kg L: <strong>'+t.block1kgLow+' pcs</strong></span>');
+          if(t.block5kgHigh > 0) produkLines.push('<span>Block 5kg H: <strong>'+t.block5kgHigh+' pcs</strong></span>');
+          if(t.block5kgLow  > 0) produkLines.push('<span>Block 5kg L: <strong>'+t.block5kgLow+' pcs</strong></span>');
+
+          html += '<div class="trx-card" data-trx="'+encodeURIComponent(JSON.stringify(t))+'">'
+            +'<div class="trx-head">'
+            +'<div><div class="trx-id">'+t.trxId+jenisBadge+'</div><div class="trx-buyer">'+t.buyer+'</div><div class="trx-do">DO: '+t.nomorDO+(t.trxRef?' ↩ '+t.trxRef:'')+'</div></div>'
+            +'<div style="text-align:right;"><span class="tbl-status '+statusCls+'">'+statusLabel+'</span><div style="font-family:var(--mono);font-size:10px;color:var(--stone);margin-top:4px;">'+t.tanggal+'</div></div>'
+            +'</div>'
+            +'<div class="trx-body">'
+            +'<div class="trx-produk-row">'+produkLines.join('')+'</div>'
+            +(t.totalNilai > 0 ? '<div class="trx-nilai">'+fmtRp(t.totalNilai)+'</div>' : '')
+            +(t.catatan ? '<div class="trx-meta">'+t.catatan+'</div>' : '')
+            +'</div>'
+            +'</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+
+        // Click → drawer detail + cancel
+        el.querySelectorAll('.trx-card').forEach(function(card){
+          card.addEventListener('click', function(){
+            var t = JSON.parse(decodeURIComponent(card.dataset.trx));
+            openDrawer(t);
+          });
+        });
+      })
+      .catch(function(){ el.innerHTML='<div class="empty"><div class="empty-p">Gagal memuat riwayat.</div></div>'; });
+  }
+
+  // ── Drawer detail ─────────────────────────────────────────
+  function openDrawer(t){
+    var drawer = qs('#pjl-drawer');
+    var body   = qs('#pjl-dr-body');
+    var jenis  = t.jenis || 'penjualan';
+    qs('#pjl-dr-title').textContent = t.trxId;
+
+    var jenisBadgeHtml = '';
+    if(jenis === 'sample') jenisBadgeHtml = '<span class="jenis-badge sample" style="margin-left:0;display:block;margin-bottom:6px;">Sample Shipment</span>';
+    else if(jenis === 'retur') jenisBadgeHtml = '<span class="jenis-badge retur" style="margin-left:0;display:block;margin-bottom:6px;">Retur Barang</span>';
+
+    var trxRefInfo = (jenis === 'retur' && t.trxRef)
+      ? '<div style="margin-top:6px;font-size:12px;color:var(--stone);">Referensi transaksi asal: <span style="font-family:var(--mono);color:var(--leaf);font-weight:600;">'+t.trxRef+'</span></div>' : '';
+
+    var cancelBtn = (t.status === 'submitted')
+      ? '<button class="btn-danger" id="pjl-cancel-btn" type="button">Batalkan transaksi ini</button>' : '';
+    var cancelInfo = (t.status === 'cancelled')
+      ? '<div style="background:var(--rose-bg);padding:10px;border-radius:var(--r);font-size:12px;color:var(--rose);margin-top:10px;">Dibatalkan: '+t.cancelReason+'</div>' : '';
+    // Tombol retur: hanya untuk penjualan/sample yang submitted (bukan retur, bukan cancelled)
+    var returBtn = (t.status === 'submitted' && jenis !== 'retur')
+      ? '<button class="btn-retur" id="pjl-retur-btn" type="button">↩ Catat Retur Barang</button>' : '';
+
+    body.innerHTML =
+      jenisBadgeHtml
+      +'<div class="field"><div class="f-label">Buyer</div><div style="font-size:15px;font-weight:600;color:var(--char);">'+t.buyer+'</div></div>'
+      + trxRefInfo
+      +'<div class="grid2" style="margin-top:10px;">'
+      +'<div class="field"><div class="f-label">Nomor Invoice</div><div style="font-family:var(--mono);font-size:13px;">'+(t.nomorInvoice||t.nomorPO||'—')+'</div></div>'
+      +'<div class="field"><div class="f-label">Nomor DO</div><div style="font-family:var(--mono);font-size:13px;">'+t.nomorDO+'</div></div>'
+      +'</div>'
+      +'<div class="grid2" style="margin-top:10px;">'
+      +'<div class="field"><div class="f-label">Tanggal</div><div style="font-family:var(--mono);font-size:13px;">'+t.tanggal+'</div></div>'
+      +'<div class="field"><div class="f-label">Operator</div><div style="font-family:var(--mono);font-size:13px;">'+(t.operator||'—')+'</div></div>'
+      +'</div>'
+      +'<div style="margin-top:14px;padding:12px 14px;background:var(--cream2);border-radius:var(--r);">'
+      +(t.keringHighKg>0?'<div style="font-family:var(--mono);font-size:13px;">Kering High EC: <strong>'+t.keringHighKg.toFixed(2)+' kg</strong></div>':'')
+      +(t.keringLowKg >0?'<div style="font-family:var(--mono);font-size:13px;">Kering Low EC: <strong>'+t.keringLowKg.toFixed(2)+' kg</strong></div>':'')
+      +(t.block1kgHigh>0?'<div style="font-family:var(--mono);font-size:13px;">Block 1kg High: <strong>'+t.block1kgHigh+' pcs</strong></div>':'')
+      +(t.block1kgLow >0?'<div style="font-family:var(--mono);font-size:13px;">Block 1kg Low: <strong>'+t.block1kgLow+' pcs</strong></div>':'')
+      +(t.block5kgHigh>0?'<div style="font-family:var(--mono);font-size:13px;">Block 5kg High: <strong>'+t.block5kgHigh+' pcs</strong></div>':'')
+      +(t.block5kgLow >0?'<div style="font-family:var(--mono);font-size:13px;">Block 5kg Low: <strong>'+t.block5kgLow+' pcs</strong></div>':'')
+      +(t.totalNilai>0?'<div style="margin-top:8px;font-family:var(--mono);font-size:15px;color:var(--leaf);font-weight:600;">'+fmtRp(t.totalNilai)+'</div>':'')
+      +'</div>'
+      +(t.catatan?'<div class="log-note" style="margin:10px 0 0;">'+t.catatan+'</div>':'')
+      + cancelInfo
+      + returBtn
+      + cancelBtn
+      + '<div id="pjl-retur-form-area"></div>';
+
+    drawer.classList.add('show');
+
+    // ── Handler: Batalkan ──
+    var cancelEl = body.querySelector('#pjl-cancel-btn');
+    if(cancelEl){
+      cancelEl.addEventListener('click', function(){
+        var reason = prompt('Alasan pembatalan (wajib):');
+        if(!reason || !reason.trim()){ return; }
+        cancelEl.disabled = true; cancelEl.textContent = 'Membatalkan...';
+        var payload = { type:'penjualan-cancel', trxId:t.trxId, cancelReason:reason.trim(), cancelBy:'' };
+        fetch(SHEETS_URL, {
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify(payload)
+        }).then(function(){
+          drawer.classList.remove('show');
+          showToast('Transaksi '+t.trxId+' dibatalkan', 'ok');
+          stokCache = null;
+          renderRiwayat();
+        }).catch(function(e){
+          showToast('Gagal cancel: '+e, 'err');
+          cancelEl.disabled = false; cancelEl.textContent = 'Batalkan transaksi ini';
+        });
+      });
+    }
+
+    // ── Handler: Catat Retur ──
+    var returBtnEl = body.querySelector('#pjl-retur-btn');
+    if(returBtnEl){
+      returBtnEl.addEventListener('click', function(){
+        returBtnEl.style.display = 'none';
+        showReturForm(t, body.querySelector('#pjl-retur-form-area'));
+      });
+    }
+  }
+
+  // ── Inline retur form ─────────────────────────────────────
+  function showReturForm(t, container){
+    var today = new Date();
+    var todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+    // Bangun input qty per produk yang punya qty di transaksi asal
+    var qtyRows = '';
+    if(t.keringHighKg > 0) qtyRows += '<div class="field"><label class="f-label">Kering High EC — maks '+t.keringHighKg.toFixed(2)+' kg</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-kh" min="0" max="'+t.keringHighKg+'" step="0.01" placeholder="0" class="no-unit"><span class="f-unit">kg</span></div></div>';
+    if(t.keringLowKg > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Kering Low EC — maks '+t.keringLowKg.toFixed(2)+' kg</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-kl" min="0" max="'+t.keringLowKg+'" step="0.01" placeholder="0" class="no-unit"><span class="f-unit">kg</span></div></div>';
+    if(t.block1kgHigh > 0) qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 1kg High — maks '+t.block1kgHigh+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b1h" min="0" max="'+t.block1kgHigh+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block1kgLow > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 1kg Low — maks '+t.block1kgLow+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b1l" min="0" max="'+t.block1kgLow+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block5kgHigh > 0) qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 5kg High — maks '+t.block5kgHigh+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b5h" min="0" max="'+t.block5kgHigh+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+    if(t.block5kgLow > 0)  qtyRows += '<div class="field" style="margin-top:8px;"><label class="f-label">Block 5kg Low — maks '+t.block5kgLow+' pcs</label>'
+      +'<div class="f-wrap"><input type="number" id="rt-b5l" min="0" max="'+t.block5kgLow+'" step="1" placeholder="0" class="no-unit"><span class="f-unit">pcs</span></div></div>';
+
+    container.innerHTML =
+      '<div class="retur-form">'
+      +'<div class="retur-form-title">↩ Form Retur Barang</div>'
+      +'<div class="field"><label class="f-label">Tanggal Retur</label>'
+      +'<div class="f-wrap"><input type="date" id="rt-tanggal" value="'+todayStr+'" class="no-unit"></div></div>'
+      + qtyRows
+      +'<div class="field" style="margin-top:8px;"><label class="f-label">Alasan Retur <span style="color:var(--rose)">*</span></label>'
+      +'<div class="f-wrap"><textarea id="rt-catatan" placeholder="Alasan retur (wajib)..." style="height:56px;"></textarea></div></div>'
+      +'<div id="rt-error" style="display:none;background:var(--rose-bg);padding:8px 12px;border-radius:var(--r);font-size:12px;color:var(--rose);margin-top:8px;"></div>'
+      +'<button class="btn-retur" id="rt-submit" type="button" style="margin-top:10px;">Simpan Retur</button>'
+      +'</div>';
+
+    container.querySelector('#rt-submit').addEventListener('click', function(){
+      var rtanggal = container.querySelector('#rt-tanggal').value;
+      var rcatatan = container.querySelector('#rt-catatan').value.trim();
+      var rKH = pn((container.querySelector('#rt-kh')  || {value:'0'}).value);
+      var rKL = pn((container.querySelector('#rt-kl')  || {value:'0'}).value);
+      var rB1H= pn((container.querySelector('#rt-b1h') || {value:'0'}).value);
+      var rB1L= pn((container.querySelector('#rt-b1l') || {value:'0'}).value);
+      var rB5H= pn((container.querySelector('#rt-b5h') || {value:'0'}).value);
+      var rB5L= pn((container.querySelector('#rt-b5l') || {value:'0'}).value);
+      var rtErr = container.querySelector('#rt-error');
+
+      if(!rtanggal){ rtErr.textContent='Tanggal wajib diisi.'; rtErr.style.display='block'; return; }
+      if(!rcatatan){ rtErr.textContent='Alasan retur wajib diisi.'; rtErr.style.display='block'; return; }
+      if((rKH+rKL+rB1H+rB1L+rB5H+rB5L) <= 0){ rtErr.textContent='Masukkan qty minimal 1 produk.'; rtErr.style.display='block'; return; }
+      rtErr.style.display='none';
+
+      var submitEl = container.querySelector('#rt-submit');
+      submitEl.disabled = true; submitEl.textContent = 'Menyimpan retur...';
+
+      var payload = {
+        type: 'penjualan-retur',
+        trxRef: t.trxId,
+        tanggal: rtanggal,
+        catatan: rcatatan,
+        keringHighKg: rKH, keringLowKg: rKL,
+        block1kgHigh: rB1H, block1kgLow: rB1L,
+        block5kgHigh: rB5H, block5kgLow: rB5L,
+        operator: '',
+        inputTime: new Date().toISOString()
+      };
+
+      fetch(SHEETS_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(payload)
+      }).then(function(){
+        qs('#pjl-drawer').classList.remove('show');
+        showToast('✅ Retur dicatat! Stok sudah dikembalikan.', 'ok');
+        stokCache = null;
+        renderRiwayat();
+      }).catch(function(e){
+        rtErr.textContent = 'Gagal kirim: '+e;
+        rtErr.style.display='block';
+        submitEl.disabled = false; submitEl.textContent = 'Simpan Retur';
+      });
+    });
+  }
+
+  // ── Subnav pane switching ─────────────────────────────────
+  function switchPane(pane){
+    section.querySelectorAll('.subnav-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.pane === pane);
+    });
+    section.querySelectorAll('.page').forEach(function(p){
+      p.classList.toggle('active', p.dataset.pane === pane);
+    });
+    // Lazy-load data saat tab dibuka pertama kali
+    if(pane === 'stok')    renderStok();
+    if(pane === 'input')   renderStokMini();
+    if(pane === 'riwayat') renderRiwayat();
+  }
+
+  // ── Laporan WhatsApp ─────────────────────────────────────
+  function salinLaporanWA(){
+    var btn = document.getElementById('pjl-wa-btn');
+    var originalHTML = btn ? btn.innerHTML : '';
+    if(btn){ btn.textContent = '⏳ Memuat...'; btn.disabled = true; }
+
+    fetch(SHEETS_URL + '?action=penjualan-riwayat')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(btn){ btn.disabled = false; btn.innerHTML = originalHTML; }
+        if(!d.ok || !d.transaksi){ showToast('Gagal memuat data penjualan.'); return; }
+
+        // Filter: hari ini + submitted + bukan retur
+        var today = new Date();
+        var todayStr = today.getFullYear()+'-'
+          +String(today.getMonth()+1).padStart(2,'0')+'-'
+          +String(today.getDate()).padStart(2,'0');
+
+        var txToday = d.transaksi.filter(function(t){
+          return t.tanggal === todayStr
+            && t.status === 'submitted'
+            && (t.jenis||'penjualan') !== 'retur';
+        });
+
+        // Tanggal human-readable Bahasa Indonesia
+        var daysId   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        var monthsId = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        var dateLabel = daysId[today.getDay()]+', '+today.getDate()+' '+monthsId[today.getMonth()]+' '+today.getFullYear();
+
+        var lines = [];
+        lines.push('📦 *Laporan Penjualan VSK*');
+        lines.push('📅 ' + dateLabel);
+        lines.push('');
+
+        if(txToday.length === 0){
+          lines.push('_Belum ada penjualan tercatat hari ini._');
+        } else {
+          var totalNilaiHari = 0;
+          txToday.forEach(function(t, i){
+            lines.push('*' + (i+1) + '. ' + t.buyer + '*');
+            var inv = t.nomorInvoice || t.nomorPO || '—';
+            lines.push('   📋 Invoice: ' + inv + ' | DO: ' + (t.nomorDO||'—'));
+            var produk = [];
+            if(t.keringHighKg > 0) produk.push('Kering High: ' + Number(t.keringHighKg).toFixed(2) + ' kg');
+            if(t.keringLowKg  > 0) produk.push('Kering Low: '  + Number(t.keringLowKg).toFixed(2)  + ' kg');
+            if(t.block1kgHigh > 0) produk.push('Block 1kg High: ' + t.block1kgHigh + ' pcs');
+            if(t.block1kgLow  > 0) produk.push('Block 1kg Low: '  + t.block1kgLow  + ' pcs');
+            if(t.block5kgHigh > 0) produk.push('Block 5kg High: ' + t.block5kgHigh + ' pcs');
+            if(t.block5kgLow  > 0) produk.push('Block 5kg Low: '  + t.block5kgLow  + ' pcs');
+            if(produk.length) lines.push('   📦 ' + produk.join(', '));
+            if(t.totalNilai > 0){
+              lines.push('   💰 ' + fmtRp(t.totalNilai));
+              totalNilaiHari += Number(t.totalNilai);
+            }
+            if((t.jenis||'penjualan') === 'sample') lines.push('   _(Sample shipment)_');
+            if(t.catatan) lines.push('   📝 ' + t.catatan);
+            lines.push('');
+          });
+          lines.push('─────────────────');
+          lines.push('*Total transaksi: ' + txToday.length + '*');
+          if(totalNilaiHari > 0) lines.push('*Total nilai: ' + fmtRp(totalNilaiHari) + '*');
+        }
+
+        lines.push('');
+        if(window.VSK && window.VSK.IS_STAGING){
+          lines.push('*Confidential VSK Production System Report.*');
+          lines.push('*It is prohibited to disseminate this information unless written approval is obtained from VSK management.*');
+          lines.push('*©️All Right Reserved PT Varian Sumber Karya®️*');
+          lines.push('_Staging_');
+        } else {
+          lines.push('*Confidential VSK Selling System Report.*');
+          lines.push('*It is prohibited to disseminate this information unless written approval is obtained from VSK management.*');
+          lines.push('*©️All Right Reserved PT Varian Sumber Karya®️*');
+        }
+
+        var text = lines.join('\n');
+        var waUrl = 'https://chat.whatsapp.com/DBBbbwJOniAKRLBAbbUfZJ?mode=gi_t';
+
+        navigator.clipboard.writeText(text).then(function(){
+          showToast('✅ Laporan disalin! Paste di grup WhatsApp.');
+          window.open(waUrl, '_blank');
+        }).catch(function(){
+          // Fallback: buka grup saja, user paste manual
+          showToast('Buka WhatsApp dan paste laporan secara manual.');
+          window.open(waUrl, '_blank');
+        });
+      })
+      .catch(function(){
+        if(btn){ btn.disabled = false; btn.innerHTML = originalHTML; }
+        showToast('Gagal memuat data penjualan.');
+      });
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  function init(){
+    SHEETS_URL = window.VSK.SHEETS_URL;
+
+    // Set tanggal default = hari ini
+    var today = new Date();
+    qs('#pjl-tanggal').value = today.getFullYear()+'-'
+      +String(today.getMonth()+1).padStart(2,'0')+'-'
+      +String(today.getDate()).padStart(2,'0');
+
+    // Subnav
+    section.querySelectorAll('.subnav-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){ switchPane(btn.dataset.pane); });
+    });
+
+    // Inisialisasi tabel produk dengan 1 baris kosong
+    addTableRow();
+
+    // Tombol tambah baris
+    qs('#pjl-add-row').addEventListener('click', function(){ addTableRow(); });
+
+    // Submit
+    qs('#pjl-submit').addEventListener('click', submitPenjualan);
+
+    // Refresh buttons
+    document.getElementById('pjl-refresh-stok').addEventListener('click', function(){ stokCache=null; renderStok(); });
+    document.getElementById('pjl-refresh-riwayat').addEventListener('click', renderRiwayat);
+
+    // Tombol WA laporan
+    document.getElementById('pjl-wa-btn').addEventListener('click', salinLaporanWA);
+
+    // Drawer close
+    qs('#pjl-dr-close').addEventListener('click', function(){ qs('#pjl-drawer').classList.remove('show'); });
+    qs('#pjl-drawer').addEventListener('click', function(e){
+      if(e.target === qs('#pjl-drawer')) qs('#pjl-drawer').classList.remove('show');
+    });
+
+    // Tab aktif default adalah Input → load stok mini
+    renderStokMini();
+  }
+
+  // Tunggu VSK global ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      if(window.VSK) init(); else document.addEventListener('vsk:ready', init);
+    });
+  } else {
+    if(window.VSK) init(); else document.addEventListener('vsk:ready', init);
+  }
+})();
+
+</script>
+</body>
+</html>

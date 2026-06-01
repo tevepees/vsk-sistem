@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#faf8f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="VSK Produksi">
+<link rel="manifest" href="/manifest.json">
+<title>VSK — Produksi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="side-brand">
+    <a href="/"><img src="/logo.svg" alt="VSK" class="vsk-logo"></a>
+    <div>
+      <div class="side-brand-name">PT Varian Sumber Karya</div>
+      <div class="side-brand-sub">Building Value from Every Source</div>
+    </div>
+  </div>
+
+  <nav class="side-nav">
+    <div class="side-section-title">Modul</div>
+    <a class="side-item" href="/produksi">
+      <span class="side-item-icon">🏭</span>
+      <span>Produksi</span>
+    </a>
+    <a class="side-item" href="/rawmat">
+      <span class="side-item-icon">📦</span>
+      <span>Bahan Baku</span>
+      <span class="side-item-meta" id="side-rawmat-meta" style="display:none">●</span>
+    </a>
+    <a class="side-item" href="/penjualan">
+      <span class="side-item-icon">🛒</span>
+      <span>Penjualan</span>
+    </a>
+  </nav>
+
+  <div class="side-foot">
+    <div class="env-badge" id="env-badge">staging</div>
+    <div class="side-foot-date">
+      <div class="side-foot-day" id="top-day"></div>
+      <div class="side-foot-fulldate" id="top-date"></div>
+    </div>
+  </div>
+</aside>
+
+<main class="content">
+<section class="module active" data-module="produksi" id="mod-produksi">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Rekap <em>Produksi</em></div>
+      <div class="topbar-sub">Input shift harian, target 60 pcs / 300 kg</div>
+    </div>
+    <button class="btn-help" id="btn-help-produksi" type="button">📖 Cara pakai</button>
+  </header>
+
+  <!-- Modal Panduan Operator -->
+  <div class="help-overlay" id="help-overlay-produksi">
+    <div class="help-modal">
+      <div class="help-head">
+        <div class="help-title">📖 Cara Pakai Modul Produksi</div>
+        <button class="help-close" id="help-close-produksi" type="button">×</button>
+      </div>
+      <div class="help-tabs">
+        <button class="help-tab active" data-pane="biasa" type="button">Pengeringan Biasa</button>
+        <button class="help-tab" data-pane="gagal" type="button">Pengeringan Gagal / Carry-Over</button>
+        <button class="help-tab" data-pane="istilah" type="button">Istilah</button>
+      </div>
+      <div class="help-body">
+        <!-- TAB 1: Pengeringan biasa -->
+        <div class="help-pane active" data-pane="biasa">
+          <h4>Kapan dipakai</h4>
+          <p>Setiap akhir shift produksi (pagi atau sore) — saat hasil pengeringan sudah keluar dari mesin.</p>
+
+          <h4>Langkah-langkah</h4>
+          <ol>
+            <li><strong>Pilih shift</strong> kamu sekarang: <em>Pagi</em> atau <em>Sore</em>.</li>
+            <li><strong>Tulis nama operator</strong> di kotak "Nama operator".</li>
+            <li>Di bagian <em>Produksi High EC</em>, isi 4 angka untuk hasil High EC hari ini:
+              <ul>
+                <li><strong>Karung dijemur</strong>: berapa karung yang masuk ke pengeringan.</li>
+                <li><strong>Bahan basah (kg)</strong>: berapa kg basah yang masuk pengeringan.</li>
+                <li><strong>Hasil kering (kg)</strong>: berapa kg cocopeat kering yang keluar.</li>
+                <li><strong>Block jadi (pcs)</strong>: berapa block sudah dipres jadi.</li>
+              </ul>
+            </li>
+            <li>Di bagian <em>Produksi Low EC</em>, isi sama caranya untuk Low EC. Kalau hari ini tidak ada produksi Low EC, kosongkan saja semua.</li>
+            <li>Cek <strong>Susut</strong> otomatis muncul di bawah. Wajar 30%–60%. Kalau muncul "—" berarti data belum lengkap.</li>
+            <li>Pilih <strong>Status pengeringan</strong>: tap "Berhasil" (default).</li>
+            <li>Tulis <strong>Catatan</strong> kalau ada hal khusus (mesin trouble, hujan, dll). Boleh kosong.</li>
+            <li>Tap tombol hijau <code>Simpan Data Shift</code>.</li>
+            <li>Otomatis pindah ke tab <em>Rekap Hari Ini</em>. Tap <code>Salin laporan untuk WhatsApp</code> → grup WA terbuka → <strong>tap & tahan kotak chat</strong> → <em>Paste</em> → <em>Send</em>.</li>
+          </ol>
+
+          <div class="help-tip">💡 <strong>Tips:</strong> Total Block (High + Low) otomatis dihitung sistem. Kamu tidak perlu jumlahkan manual.</div>
+        </div>
+
+        <!-- TAB 2: Pengeringan gagal / carry-over -->
+        <div class="help-pane" data-pane="gagal">
+          <h4>Kapan dipakai</h4>
+          <p>Saat <strong>pengeringan gagal total atau sebagian</strong> (misal: hujan deras, mesin rusak), sehingga basah masih sisa di lapangan dan akan dijemur lagi besok atau di shift berikutnya.</p>
+
+          <div class="help-warn">⚠️ <strong>JANGAN</strong> input "Hasil kering = 0" tanpa pilih Status "Gagal". Itu akan bikin susut ngaco (sampai ribuan persen) dan stok salah.</div>
+
+          <h4>Skenario A — Hari ini gagal total (kering = 0)</h4>
+          <ol>
+            <li>Isi <strong>Karung dijemur</strong> dan <strong>Bahan basah</strong> sesuai realita.</li>
+            <li>Isi <strong>Hasil kering = 0</strong> dan <strong>Block = 0</strong>.</li>
+            <li>Pilih <strong>Status pengeringan: "Gagal"</strong>.</li>
+            <li>Tulis di <strong>Catatan</strong> alasan-nya (mis. "hujan total seharian, basah disimpan untuk besok").</li>
+            <li>Tap Simpan.</li>
+          </ol>
+          <p>Sistem akan ingat bahwa basah ini "menggantung" — tidak akan dipotong dari stok rawmat lagi besok.</p>
+
+          <h4>Skenario B — Hari ini jemur ulang basah dari kemarin (carry-over)</h4>
+          <ol>
+            <li>Isi <strong>Karung & Basah baru</strong> (kalau ada basah baru dari rawmat hari ini). Boleh 0 kalau cuma jemur sisa kemarin.</li>
+            <li>Isi <strong>Hasil kering</strong> sesuai realita (total kering yang keluar dari pengeringan).</li>
+            <li>Tap tombol <code>+ Ada basah carry-over dari shift/hari sebelumnya?</code></li>
+            <li>Isi berapa kg basah dari kemarin yang dijemur ulang hari ini, di field <strong>Carry-In High/Low EC</strong>.</li>
+            <li>Pilih Status: <em>Berhasil</em> (kalau tuntas) atau <em>Parsial</em> (kalau masih sisa lagi untuk besok).</li>
+            <li>Tap Simpan.</li>
+          </ol>
+
+          <div class="help-tip">💡 <strong>Penting:</strong> Carry-over <strong>SUDAH</strong> tercatat di Bahan Baku saat pertama kali datang dari supplier. Sistem hanya butuh tahu bahwa basah itu sekarang dijemur, supaya susut & stok tetap akurat — TIDAK akan dipotong dua kali dari stok.</div>
+
+          <h4>Contoh angka</h4>
+          <ul>
+            <li>Kemarin: gagal jemur 290 kg Low EC → Status "Gagal"</li>
+            <li>Hari ini: basah baru 10 kg, carry-over 290 kg, hasil kering 280 kg</li>
+            <li>Susut sistem hitung: (300 − 280) ÷ 300 = <strong>6.7%</strong> ✓</li>
+          </ul>
+        </div>
+
+        <!-- TAB 3: Istilah -->
+        <div class="help-pane" data-pane="istilah">
+          <h4>Istilah Penting</h4>
+          <ul>
+            <li><strong>Karung</strong>: kemasan rawmat (cocopeat basah) yang dipakai di pengeringan.</li>
+            <li><strong>Basah (kg)</strong>: berat cocopeat basah yang masuk ke pengeringan.</li>
+            <li><strong>Kering (kg)</strong>: berat cocopeat kering yang keluar dari pengeringan.</li>
+            <li><strong>Block (pcs)</strong>: cocopeat kering yang sudah dipres jadi block (siap kirim ke customer).</li>
+            <li><strong>Susut</strong>: persentase kehilangan berat dari basah ke kering. Wajar 30%–60% (cocopeat banyak air).</li>
+            <li><strong>High EC</strong>: cocopeat dengan kandungan garam mineral tinggi (untuk pasar tertentu).</li>
+            <li><strong>Low EC</strong>: cocopeat dengan kandungan garam rendah (lebih premium, untuk pasar yang lain).</li>
+            <li><strong>Carry-over</strong>: basah dari kemarin/shift sebelumnya yang dijemur ulang hari ini karena pengeringan sebelumnya gagal.</li>
+            <li><strong>Outcome</strong>: status pengeringan — Berhasil / Parsial / Gagal.</li>
+          </ul>
+
+          <div class="help-tip">💡 Kalau bingung tentang istilah lain, tanya supervisor produksi atau Tony.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="subnav">
+    <button class="subnav-btn active" data-page="input"   type="button">Input Shift</button>
+    <button class="subnav-btn"        data-page="rekap"   type="button">Rekap Hari Ini</button>
+    <button class="subnav-btn"        data-page="history" type="button">Riwayat</button>
+  </nav>
+
+  <!-- Page: Input -->
+  <div class="page active" id="page-input">
+    <div class="sec"><span class="sec-title">Pilih shift</span><span class="sec-line"></span></div>
+    <div class="shift-row">
+      <div class="shift-card on" data-shift="pagi">
+        <div class="sc-icon">🌅</div>
+        <div class="sc-name">Pagi</div>
+        <div class="sc-time">07.00 – 16.00</div>
+      </div>
+      <div class="shift-card" data-shift="sore">
+        <div class="sc-icon">🌤</div>
+        <div class="sc-name">Sore</div>
+        <div class="sc-time">16.00 – 00.00</div>
+      </div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Operator</span><span class="sec-line"></span></div>
+    <div class="field">
+      <label class="f-label">Nama operator</label>
+      <div class="f-wrap"><input type="text" id="inp-op" class="no-unit" placeholder="Nama lengkap" autocomplete="name"></div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Produksi High EC</span><span class="sec-line"></span><span class="ec-pill high">High</span></div>
+    <span class="sec-hint">Isi data produksi cocopeat <strong>High EC</strong> hari ini. Kalau hari ini tidak ada produksi High EC, biarkan kosong.</span>
+    <div class="grid2">
+      <div class="field">
+        <label class="f-label">Karung dijemur</label>
+        <div class="f-wrap"><input type="number" id="inp-karung-high" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
+        <div class="f-hint">Jumlah karung yang masuk ke pengeringan hari ini.</div>
+      </div>
+      <div class="field">
+        <label class="f-label">Bahan basah</label>
+        <div class="f-wrap"><input type="number" id="inp-basah-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+        <div class="f-hint">Berat <strong>basah baru</strong> dari rawmat hari ini. JANGAN tambahkan carry-over di sini.</div>
+      </div>
+      <div class="field">
+        <label class="f-label">Hasil kering</label>
+        <div class="f-wrap"><input type="number" id="inp-kering-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+        <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
+      </div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Produksi Low EC</span><span class="sec-line"></span><span class="ec-pill low">Low</span></div>
+    <span class="sec-hint">Isi data produksi cocopeat <strong>Low EC</strong> hari ini. Kalau tidak ada, biarkan kosong.</span>
+    <div class="grid2">
+      <div class="field">
+        <label class="f-label">Karung dijemur</label>
+        <div class="f-wrap"><input type="number" id="inp-karung-low" placeholder="0" min="0" inputmode="numeric"><span class="f-unit">krg</span></div>
+        <div class="f-hint">Jumlah karung Low EC yang masuk pengeringan.</div>
+      </div>
+      <div class="field">
+        <label class="f-label">Bahan basah</label>
+        <div class="f-wrap"><input type="number" id="inp-basah-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+        <div class="f-hint">Berat basah <strong>baru</strong> hari ini. Bukan termasuk carry-over.</div>
+      </div>
+      <div class="field">
+        <label class="f-label">Hasil kering</label>
+        <div class="f-wrap"><input type="number" id="inp-kering-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+        <div class="f-hint">Total cocopeat kering yang keluar dari pengeringan.</div>
+      </div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Block diproduksi</span><span class="sec-line"></span><span class="sec-tag">2 varian × 2 EC</span></div>
+    <span class="sec-hint">Block yang sudah dipres hari ini, per ukuran × per EC. Kalau salah satu kotak tidak ada produksi, biarkan kosong.</span>
+    <div class="block-matrix">
+      <div class="bm-cell-empty"></div>
+      <div class="bm-head bm-head-1kg">Block 1kg</div>
+      <div class="bm-head bm-head-5kg">Block 5kg</div>
+      <div class="bm-rowlabel high">High EC</div>
+      <div class="bm-input"><input type="number" id="inp-block-1kg-high" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-input"><input type="number" id="inp-block-5kg-high" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-rowlabel low">Low EC</div>
+      <div class="bm-input"><input type="number" id="inp-block-1kg-low" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+      <div class="bm-input"><input type="number" id="inp-block-5kg-low" placeholder="0" min="0" inputmode="numeric"><span class="bm-unit">pcs</span></div>
+    </div>
+    <div class="bm-total">Total block: <strong id="bm-total-val">0</strong> pcs</div>
+
+    <div class="susut-row" id="susut-row" style="opacity:.45">
+      <span class="susut-lbl">Susut penjemuran (total)</span>
+      <span class="susut-num" id="susut-val">—</span>
+    </div>
+    <div class="sec-hint" style="margin-top:6px">Susut otomatis dihitung dari (Basah dijemur − Kering) ÷ Basah dijemur. <strong>Basah dijemur</strong> = basah baru + carry-over (kalau ada).</div>
+
+    <div class="sec"><span class="sec-title">Status pengeringan</span><span class="sec-line"></span></div>
+    <span class="sec-hint">Pilih sesuai kondisi pengeringan hari ini. <strong>Berhasil</strong> = lancar normal · <strong>Parsial</strong> = sebagian gagal jemur · <strong>Gagal</strong> = tidak ada hasil kering (akan jadi carry-over besok).</span>
+    <div class="outcome-row" id="outcome-row">
+      <button class="outcome-btn active" data-outcome="berhasil" type="button">Berhasil</button>
+      <button class="outcome-btn" data-outcome="parsial" type="button">Parsial</button>
+      <button class="outcome-btn" data-outcome="gagal" type="button">Gagal</button>
+    </div>
+    <button class="carryin-toggle" id="btn-carryin-toggle" type="button">+ Ada basah carry-over dari shift/hari sebelumnya?</button>
+    <div class="carryin-section" id="carryin-section" style="display:none">
+      <div class="carryin-hint">Isi <strong>kalau hari ini kamu jemur ulang basah dari kemarin/shift sebelumnya</strong> yang gagal jemur. Basah ini sudah tercatat di Bahan Baku — sistem TIDAK akan potong stok lagi.</div>
+      <div class="grid2">
+        <div class="field">
+          <label class="f-label">Carry-In High EC</label>
+          <div class="f-wrap"><input type="number" id="inp-carryin-high" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+          <div class="f-hint">Sisa basah High EC dari kemarin yang dijemur ulang hari ini.</div>
+        </div>
+        <div class="field">
+          <label class="f-label">Carry-In Low EC</label>
+          <div class="f-wrap"><input type="number" id="inp-carryin-low" placeholder="0.0" min="0" step="0.1" inputmode="decimal"><span class="f-unit">kg</span></div>
+          <div class="f-hint">Sisa basah Low EC dari kemarin yang dijemur ulang.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec"><span class="sec-title">Catatan</span><span class="sec-line"></span><span class="sec-tag">opsional</span></div>
+    <div class="f-wrap">
+      <textarea id="inp-notes-prod" placeholder="Kendala mesin, kualitas, atau hal penting lainnya..."></textarea>
+    </div>
+
+    <button class="btn-main" id="btn-submit" type="button">Simpan Data Shift</button>
+  </div>
+
+  <!-- Page: Rekap -->
+  <div class="page" id="page-rekap">
+    <div class="hero">
+      <div class="hero-label">Block diproduksi hari ini</div>
+      <div class="hero-val" id="r-block">—<sup>pcs</sup></div>
+      <div class="hero-sub" id="r-sub">Memuat data...</div>
+    </div>
+    <div class="ec-card-row">
+      <div class="ec-card high">
+        <div class="ec-card-tag">High EC</div>
+        <div class="ec-card-stats-grid">
+          <div><span class="lbl">Karung</span><span class="val" id="r-karung-high">—</span></div>
+          <div><span class="lbl">Basah (kg)</span><span class="val" id="r-basah-high">—</span></div>
+          <div><span class="lbl">Kering (kg)</span><span class="val" id="r-kering-high">—</span></div>
+          <div><span class="lbl">Block (pcs)</span><span class="val" id="r-block-high">—</span></div>
+        </div>
+      </div>
+      <div class="ec-card low">
+        <div class="ec-card-tag">Low EC</div>
+        <div class="ec-card-stats-grid">
+          <div><span class="lbl">Karung</span><span class="val" id="r-karung-low">—</span></div>
+          <div><span class="lbl">Basah (kg)</span><span class="val" id="r-basah-low">—</span></div>
+          <div><span class="lbl">Kering (kg)</span><span class="val" id="r-kering-low">—</span></div>
+          <div><span class="lbl">Block (pcs)</span><span class="val" id="r-block-low">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-head"><span class="prog-lbl">Block 1kg vs Target</span><span class="prog-pct" id="r-pct-1kg">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="r-bar-1kg" style="width:0%"></div></div>
+      <div class="prog-foot"><span>Target: <strong>100 pcs</strong></span><span id="r-1kg-sisa"></span></div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-head"><span class="prog-lbl">Block 5kg vs Target</span><span class="prog-pct" id="r-pct-5kg">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="r-bar-5kg" style="width:0%"></div></div>
+      <div class="prog-foot"><span>Target: <strong>10 pcs</strong></span><span id="r-5kg-sisa"></span></div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-head"><span class="prog-lbl">Kering vs Target</span><span class="prog-pct" id="r-kering-pct">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="r-kering-bar" style="width:0%"></div></div>
+      <div class="prog-foot"><span>Target: <strong>150 kg</strong></span><span id="r-kering-sisa"></span><span>Susut: <strong id="r-susut">—</strong></span></div>
+    </div>
+    <div class="sec">
+      <span class="sec-title">Log per shift</span>
+      <span class="sec-line"></span>
+      <button class="sec-refresh" id="btn-refresh-rekap" type="button">↻ refresh</button>
+    </div>
+    <div class="log-stack" id="log-wrap">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat data...</div></div>
+    </div>
+    <button class="btn-ghost" id="btn-export-wa" type="button">Salin laporan untuk WhatsApp</button>
+  </div>
+
+  <!-- Page: History -->
+  <div class="page" id="page-history">
+    <div class="sec">
+      <span class="sec-title">Riwayat harian</span>
+      <span class="sec-line"></span>
+      <button class="sec-refresh" id="btn-refresh-history" type="button">↻ refresh</button>
+    </div>
+    <div class="riwayat-stack" id="riwayat-prod-stack">
+      <div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── Environment auto-detection ──
+  var SHEETS_URL_STAGING = 'https://script.google.com/macros/s/AKfycbxdpYmv3AUqcS0P7Lv-3LRYBV4nDoscDSfcupsN0UwvQt01E0Z3-YLwuLglY9iILGkl/exec';
+  var SHEETS_URL_PROD    = 'https://script.google.com/macros/s/AKfycbw3pWXUCvStevJLIA2x1r7n39Hb2UrCNYuGzwUbzLVpMtyd_ICBMS8RLR3ZqLo9_PqRaw/exec';
+
+  var IS_STAGING = location.hostname.indexOf('staging') !== -1
+                || location.hostname.indexOf('localhost') !== -1
+                || location.hostname.indexOf('127.0.0.1') !== -1;
+
+  window.VSK = {
+    SHEETS_URL: IS_STAGING ? SHEETS_URL_STAGING : SHEETS_URL_PROD,
+    IS_STAGING: IS_STAGING,
+    $: function(id){ return document.getElementById(id); },
+    qs: function(sel, root){ return (root || document).querySelector(sel); },
+    qsa: function(sel, root){ return (root || document).querySelectorAll(sel); },
+    toast: function(msg, kind){
+      var el = document.getElementById('toast');
+      if(!el) return;
+      el.textContent = msg;
+      el.className = 'toast ' + (kind || '') + ' show';
+      setTimeout(function(){ el.className = 'toast ' + (kind || ''); }, 2400);
+    },
+    todayStr: function(){
+      return new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Jakarta'});
+    },
+    modules: {}
+  };
+
+  function initShell(){
+    // ── Topbar date ──
+    var d = new Date();
+    var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    var mos  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    var dayEl  = document.getElementById('top-day');
+    var dateEl = document.getElementById('top-date');
+    if(dayEl)  dayEl.textContent  = days[d.getDay()];
+    if(dateEl) dateEl.textContent = d.getDate() + ' ' + mos[d.getMonth()] + ' ' + d.getFullYear();
+
+    // ── Staging badge ──
+    if(IS_STAGING){
+      var badge = document.getElementById('env-badge');
+      if(badge) badge.classList.add('show');
+    }
+
+    // ── Sidebar active state — berdasarkan URL pathname ──
+    var path = location.pathname.replace(/\/\/$/, '') || '/';
+    var sideItems = document.querySelectorAll('a.side-item');
+    for(var i=0; i<sideItems.length; i++){
+      var href = sideItems[i].getAttribute('href') || '';
+      sideItems[i].classList.toggle('active', href === path);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initShell);
+  } else {
+    initShell();
+  }
+
+  // Service worker
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }
+})();
+
+(function(){
+  'use strict';
+
+  var TARGET_BLOCK_1KG = 100;
+  var TARGET_BLOCK_5KG = 10;
+  var TARGET_KERING    = 150;
+
+  var section = document.getElementById('mod-produksi');
+  var $  = window.VSK.$;
+  var qs = function(sel){ return section.querySelector(sel); };
+  var qsa = function(sel){ return section.querySelectorAll(sel); };
+  var toast = window.VSK.toast;
+
+  var currentShift = 'pagi';
+  var currentOutcome = 'berhasil';
+  var carryInVisible = false;
+  var rekapCache = null;
+  var initialized = false;
+
+  // ── Sub-page router (di dalam Produksi) ──
+  function goto(page){
+    var pages = qsa('.page');
+    for(var i=0; i<pages.length; i++) pages[i].classList.remove('active');
+    var navBtns = qsa('.subnav-btn');
+    for(var j=0; j<navBtns.length; j++) navBtns[j].classList.remove('active');
+
+    var target = $('page-' + page);
+    if(target) target.classList.add('active');
+
+    for(var k=0; k<navBtns.length; k++){
+      if(navBtns[k].getAttribute('data-page') === page) navBtns[k].classList.add('active');
+    }
+
+    if(page === 'rekap')   renderRekap();
+    if(page === 'history') renderHistory();
+  }
+
+  function setShift(s){
+    currentShift = s;
+    var cards = qsa('.shift-card');
+    for(var i=0; i<cards.length; i++){
+      cards[i].classList.toggle('on', cards[i].getAttribute('data-shift') === s);
+    }
+  }
+
+  function setOutcome(o){
+    currentOutcome = o;
+    var btns = qsa('.outcome-btn');
+    for(var i=0; i<btns.length; i++){
+      btns[i].classList.toggle('active', btns[i].getAttribute('data-outcome') === o);
+    }
+  }
+
+  function updateBmTotal(){
+    var t = (parseFloat($('inp-block-1kg-high').value) || 0)
+          + (parseFloat($('inp-block-1kg-low').value)  || 0)
+          + (parseFloat($('inp-block-5kg-high').value) || 0)
+          + (parseFloat($('inp-block-5kg-low').value)  || 0);
+    var el = $('bm-total-val');
+    if(el) el.textContent = t;
+  }
+
+  function resetCarryIn(){
+    carryInVisible = false;
+    $('carryin-section').style.display = 'none';
+    $('btn-carryin-toggle').textContent = '+ Ada basah carry-over dari shift/hari sebelumnya?';
+    var ciH = $('inp-carryin-high'); if(ciH) ciH.value = '';
+    var ciL = $('inp-carryin-low');  if(ciL) ciL.value = '';
+  }
+
+  function calcSusut(){
+    // Total basah yang DIJEMUR = basah baru + carry-over
+    var basahBaru = (parseFloat($('inp-basah-high').value)  || 0)
+                  + (parseFloat($('inp-basah-low').value)   || 0);
+    var carryIn   = (parseFloat($('inp-carryin-high').value) || 0)
+                  + (parseFloat($('inp-carryin-low').value)  || 0);
+    var b = basahBaru + carryIn;
+    var k = (parseFloat($('inp-kering-high').value) || 0)
+          + (parseFloat($('inp-kering-low').value)  || 0);
+    var row = $('susut-row');
+    var val = $('susut-val');
+    if(b > 0 && k > 0 && k <= b){
+      val.textContent = ((b-k)/b*100).toFixed(1) + '%';
+      row.style.opacity = '1';
+    } else {
+      val.textContent = '—';
+      row.style.opacity = '.45';
+    }
+  }
+
+  async function submitShift(){
+    var op       = $('inp-op').value.trim();
+    var karungH  = parseFloat($('inp-karung-high').value) || 0;
+    var karungL  = parseFloat($('inp-karung-low').value)  || 0;
+    var basahH   = parseFloat($('inp-basah-high').value)  || 0;
+    var basahL   = parseFloat($('inp-basah-low').value)   || 0;
+    var keringH  = parseFloat($('inp-kering-high').value) || 0;
+    var keringL  = parseFloat($('inp-kering-low').value)  || 0;
+    // Block varian 2x2 — v8.2
+    var block1kgH = parseFloat($('inp-block-1kg-high').value) || 0;
+    var block1kgL = parseFloat($('inp-block-1kg-low').value)  || 0;
+    var block5kgH = parseFloat($('inp-block-5kg-high').value) || 0;
+    var block5kgL = parseFloat($('inp-block-5kg-low').value)  || 0;
+    var blockH = block1kgH + block5kgH;
+    var blockL = block1kgL + block5kgL;
+
+    var karung = karungH + karungL;
+    var basah  = basahH  + basahL;
+    var kering = keringH + keringL;
+    var block  = blockH  + blockL;
+
+    var notes     = $('inp-notes-prod').value.trim();
+    var carryInH  = parseFloat($('inp-carryin-high').value) || 0;
+    var carryInL  = parseFloat($('inp-carryin-low').value)  || 0;
+
+    if(!op){ toast('Isi nama operator dulu', 'err'); return; }
+    if(!karung && !basah && !block){ toast('Isi minimal satu data produksi', 'err'); return; }
+
+    var entry = {
+      date: window.VSK.todayStr(),
+      shift: currentShift,
+      operator: op,
+      karung: karung, karungHigh: karungH, karungLow: karungL,
+      basah: basah,   basahHigh: basahH,   basahLow: basahL,
+      kering: kering, keringHigh: keringH, keringLow: keringL,
+      block: block,   blockHigh: blockH,   blockLow: blockL,
+      block1kgHigh: block1kgH, block1kgLow: block1kgL,
+      block5kgHigh: block5kgH, block5kgLow: block5kgL,
+      outcome: currentOutcome,
+      carryInHigh: carryInH, carryInLow: carryInL,
+      notes: notes,
+      time: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})
+    };
+
+    var btn = $('btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+      await fetch(window.VSK.SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain;charset=utf-8'},
+        body: JSON.stringify(entry)
+      });
+      toast('Data shift ' + currentShift + ' tersimpan ✓', 'ok');
+
+      ['inp-op',
+       'inp-karung-high','inp-karung-low',
+       'inp-basah-high','inp-basah-low',
+       'inp-kering-high','inp-kering-low',
+       'inp-block-1kg-high','inp-block-1kg-low',
+       'inp-block-5kg-high','inp-block-5kg-low',
+       'inp-notes-prod'].forEach(function(id){
+        var el = $(id); if(el) el.value = '';
+      });
+      updateBmTotal();
+      setOutcome('berhasil');
+      resetCarryIn();
+      calcSusut();
+      goto('rekap');
+    } catch(err){
+      toast('Gagal kirim ke server', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Data Shift';
+    }
+  }
+
+  async function renderRekap(){
+    var wrap = $('log-wrap');
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat dari server...</div></div>';
+    $('r-block').innerHTML = '—<sup>pcs</sup>';
+    $('r-sub').textContent = 'Memuat data...';
+
+    var entries = [];
+    try {
+      var res = await fetch(window.VSK.SHEETS_URL + '?action=rekap');
+      var json = await res.json();
+      if(json.ok) entries = json.entries || [];
+    } catch(err){
+      wrap.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-h">Gagal memuat data</div><div class="empty-p">Periksa koneksi lalu tap ↻ refresh</div></div>';
+      return;
+    }
+
+    function tot(k){ return entries.reduce(function(s,e){ return s + (parseFloat(e[k])||0); }, 0); }
+    var tK = tot('karung'), tB = tot('basah'), tKg = tot('kering'), tBl = tot('block');
+    // EC breakdown
+    var tKh  = tot('karungHigh'), tKl  = tot('karungLow');
+    var tBh  = tot('basahHigh'),  tBll = tot('basahLow');
+    var tKgh = tot('keringHigh'), tKgl = tot('keringLow');
+    var tBlh = tot('blockHigh'),  tBlw = tot('blockLow');
+    // Carry-over breakdown
+    var tCh = tot('carryInHigh'), tCl = tot('carryInLow');
+    var tCarry = tCh + tCl;
+
+    // Susut formula: basis = TOTAL BASAH DIJEMUR (basah baru + carry-over)
+    var totalDijemur = tB + tCarry;
+    var susut = totalDijemur > 0 && tKg <= totalDijemur
+      ? ((totalDijemur - tKg) / totalDijemur * 100).toFixed(1) + '%'
+      : '—';
+    // Block varian aggregate
+    var tBlk1kgH = tot('block1kgHigh'), tBlk1kgL = tot('block1kgLow');
+    var tBlk5kgH = tot('block5kgHigh'), tBlk5kgL = tot('block5kgLow');
+    var tBlk1kg = tBlk1kgH + tBlk1kgL;
+    var tBlk5kg = tBlk5kgH + tBlk5kgL;
+    var pct1kg = tBlk1kg > 0 ? Math.min(Math.round(tBlk1kg / TARGET_BLOCK_1KG * 100), 999) : 0;
+    var pct5kg = tBlk5kg > 0 ? Math.min(Math.round(tBlk5kg / TARGET_BLOCK_5KG * 100), 999) : 0;
+    var pctKering = tKg > 0 ? Math.min(Math.round(tKg/TARGET_KERING*100), 999) : 0;
+    var sisaKering = Math.max(TARGET_KERING - tKg, 0).toFixed(1);
+
+    $('r-block').innerHTML = tBl + '<sup>pcs</sup>';
+    $('r-sub').textContent = entries.length
+      ? tBlk1kg + ' pcs 1kg · ' + tBlk5kg + ' pcs 5kg · ' + entries.length + ' shift masuk'
+      : 'Belum ada data hari ini';
+
+    // EC cards
+    $('r-karung-high').textContent = tKh;
+    $('r-karung-low').textContent  = tKl;
+    $('r-basah-high').textContent  = tBh.toFixed(1);
+    $('r-basah-low').textContent   = tBll.toFixed(1);
+    $('r-kering-high').textContent = tKgh.toFixed(1);
+    $('r-kering-low').textContent  = tKgl.toFixed(1);
+    $('r-block-high').textContent  = tBlh;
+    $('r-block-low').textContent   = tBlw;
+
+    // Progress 1kg
+    $('r-pct-1kg').textContent = pct1kg + '%';
+    $('r-1kg-sisa').textContent = tBlk1kg < TARGET_BLOCK_1KG
+      ? 'Sisa: ' + (TARGET_BLOCK_1KG - tBlk1kg) + ' pcs'
+      : 'Target tercapai ✓';
+    var bar1 = $('r-bar-1kg');
+    bar1.style.width = Math.min(pct1kg, 100) + '%';
+    bar1.className = 'prog-fill' + (pct1kg < 70 ? ' warn' : '');
+
+    // Progress 5kg
+    $('r-pct-5kg').textContent = pct5kg + '%';
+    $('r-5kg-sisa').textContent = tBlk5kg < TARGET_BLOCK_5KG
+      ? 'Sisa: ' + (TARGET_BLOCK_5KG - tBlk5kg) + ' pcs'
+      : 'Target tercapai ✓';
+    var bar5 = $('r-bar-5kg');
+    bar5.style.width = Math.min(pct5kg, 100) + '%';
+    bar5.className = 'prog-fill' + (pct5kg < 70 ? ' warn' : '');
+
+    // Susut + Kering
+    $('r-susut').textContent      = susut;
+    $('r-kering-pct').textContent = pctKering + '%';
+    $('r-kering-sisa').textContent = tKg < TARGET_KERING ? 'Sisa: ' + sisaKering + ' kg' : 'Target tercapai ✓';
+    var barK = $('r-kering-bar');
+    barK.style.width = Math.min(pctKering, 100) + '%';
+    barK.className = 'prog-fill' + (pctKering < 70 ? ' warn' : '');
+
+    if(!entries.length){
+      wrap.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-h">Belum ada data hari ini</div><div class="empty-p">Masukkan dari tab Input Shift</div></div>';
+      return;
+    }
+
+    entries.sort(function(a,b){ return a.shift === 'pagi' ? -1 : 1; });
+    wrap.innerHTML = entries.map(function(e){
+      var bh = e.blockHigh || 0, bl = e.blockLow || 0;
+      var hasBreak = (bh + bl) > 0;
+      var blockLbl = 'Block (pcs)' + (hasBreak
+        ? '<br><span style="font-size:9px;color:var(--sand)">H:' + bh + ' / L:' + bl + '</span>'
+        : '');
+      var outcome = e.outcome || 'berhasil';
+      var outcomeBadge = (outcome !== 'berhasil')
+        ? '<span class="outcome-badge ' + outcome + '">' + outcome.charAt(0).toUpperCase() + outcome.slice(1) + '</span>'
+        : '';
+      var carryTotal = (parseFloat(e.carryInHigh) || 0) + (parseFloat(e.carryInLow) || 0);
+      var carryNote = carryTotal > 0
+        ? '<div class="log-note" style="background:var(--leaf-bg);color:var(--leaf)">Carry-over: ' + carryTotal.toFixed(1) + ' kg basah dari sebelumnya (sudah dikecualikan dari rawmat)</div>'
+        : '';
+      return '<div class="log-card">' +
+        '<div class="log-head">' +
+          '<div class="log-badge">' +
+            '<span class="log-dot ' + String(e.shift).toLowerCase() + '"></span>' +
+            '<div><div class="log-shift-name">Shift ' + e.shift + outcomeBadge + '</div><div class="log-op">' + e.operator + '</div></div>' +
+          '</div>' +
+          '<span class="log-time">Input ' + e.time + '</span>' +
+        '</div>' +
+        '<div class="log-stats">' +
+          '<div class="ls"><div class="ls-val">' + e.karung + '</div><div class="ls-lbl">Karung</div></div>' +
+          '<div class="ls"><div class="ls-val">' + e.basah  + '</div><div class="ls-lbl">Basah (kg)</div></div>' +
+          '<div class="ls"><div class="ls-val">' + e.kering + '</div><div class="ls-lbl">Kering (kg)</div></div>' +
+          '<div class="ls"><div class="ls-val green">' + e.block + '</div><div class="ls-lbl">' + blockLbl + '</div></div>' +
+        '</div>' +
+        carryNote +
+        (e.notes ? '<div class="log-note">' + e.notes + '</div>' : '') +
+      '</div>';
+    }).join('');
+
+    rekapCache = {
+      entries: entries,
+      tK: tK, tB: tB, tKg: tKg, tBl: tBl,
+      tKh: tKh, tKl: tKl,
+      tBh: tBh, tBll: tBll,
+      tKgh: tKgh, tKgl: tKgl,
+      tBlh: tBlh, tBlw: tBlw,
+      tBlk1kg: tBlk1kg, tBlk5kg: tBlk5kg,
+      tBlk1kgH: tBlk1kgH, tBlk1kgL: tBlk1kgL,
+      tBlk5kgH: tBlk5kgH, tBlk5kgL: tBlk5kgL,
+      pct1kg: pct1kg, pct5kg: pct5kg,
+      tCh: tCh, tCl: tCl, tCarry: tCarry, totalDijemur: totalDijemur,
+      susut: susut
+    };
+  }
+
+  async function renderHistory(){
+    var stack = $('riwayat-prod-stack');
+    stack.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-h">Memuat riwayat...</div></div>';
+
+    var rows = [];
+    try {
+      var res = await fetch(window.VSK.SHEETS_URL + '?action=riwayat');
+      var json = await res.json();
+      if(json.ok) rows = json.rows || [];
+    } catch(err){
+      stack.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-h">Gagal memuat</div><div class="empty-p">Periksa koneksi, lalu tap ↻ refresh</div></div>';
+      return;
+    }
+
+    if(!rows.length){
+      stack.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-h">Belum ada riwayat</div></div>';
+      return;
+    }
+
+    // Susut: pakai TOTAL DIJEMUR = basah baru + carry-over
+    function susutOf(basahBaru, carry, kering){
+      var dijemur = basahBaru + carry;
+      return dijemur > 0 && kering <= dijemur
+        ? ((dijemur - kering) / dijemur * 100).toFixed(1) + '%'
+        : '—';
+    }
+    function ecBlock(label, klass, krg, bas, carry, ker, blk){
+      var carryNote = carry > 0
+        ? ' <span style="color:var(--sand);font-style:italic">(+ ' + carry.toFixed(1) + ' kg carry)</span>'
+        : '';
+      return '<div class="rc-ec-row ' + klass + '">' +
+        '<span class="rc-ec-tag">' + label + '</span>' +
+        '<div class="rc-stats">' +
+          '<span><strong>' + krg + '</strong> krg</span>' +
+          '<span><strong>' + bas.toFixed(1) + '</strong> kg basah' + carryNote + '</span>' +
+          '<span><strong>' + ker.toFixed(1) + '</strong> kg kering</span>' +
+          '<span><strong>' + blk + '</strong> block</span>' +
+          '<span>susut <strong>' + susutOf(bas, carry, ker) + '</strong></span>' +
+        '</div>' +
+      '</div>';
+    }
+
+    stack.innerHTML = rows.map(function(r){
+      var hasHigh = (r.karungHigh + r.basahHigh + r.keringHigh + r.blockHigh + (r.carryInHigh||0)) > 0;
+      var hasLow  = (r.karungLow  + r.basahLow  + r.keringLow  + r.blockLow  + (r.carryInLow||0))  > 0;
+      var ecRows = '';
+      if(hasHigh) ecRows += ecBlock('High EC', 'high', r.karungHigh, r.basahHigh, (r.carryInHigh||0), r.keringHigh, r.blockHigh);
+      if(hasLow)  ecRows += ecBlock('Low EC',  'low',  r.karungLow,  r.basahLow,  (r.carryInLow||0),  r.keringLow,  r.blockLow);
+      // Fallback: data legacy yang tidak ter-tag (harusnya tidak ada setelah migrasi v8, tapi jaga-jaga)
+      if(!ecRows) ecRows = ecBlock('Total', 'legacy', r.karung, r.basah, 0, r.kering, r.block);
+
+      return '<div class="riwayat-card">' +
+        '<div class="rc-header">' +
+          '<span class="rc-date">' + r.date + '</span>' +
+          '<span class="rc-shifts">' + (r.shifts || []).join(' · ') + '</span>' +
+        '</div>' +
+        ecRows +
+      '</div>';
+    }).join('');
+  }
+
+  function exportWA(){
+    var c = rekapCache;
+    if(!c || !c.entries || !c.entries.length){ toast('Buka Rekap Hari Ini dulu', 'err'); return; }
+    var d = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    var sorted = c.entries.slice().sort(function(a,b){ return a.shift === 'pagi' ? -1 : 1; });
+    var lines = sorted.map(function(e){
+      var hasHigh = (e.karungHigh + e.basahHigh + e.keringHigh + e.blockHigh) > 0;
+      var hasLow  = (e.karungLow  + e.basahLow  + e.keringLow  + e.blockLow)  > 0;
+      var head = '  [' + String(e.shift).toUpperCase() + '] ' + e.operator;
+      var body = '';
+      function blockBreak(h1, h5){
+        var has = (h1||0) + (h5||0);
+        if(has === 0) return '';
+        return ' [1kg:' + (h1||0) + ' / 5kg:' + (h5||0) + ']';
+      }
+      if(hasHigh) body += '\n     🟢 H: ' + e.karungHigh + ' krg | ' + e.basahHigh + ' kg basah | ' + e.keringHigh + ' kg kering | ' + e.blockHigh + ' pcs' + blockBreak(e.block1kgHigh, e.block5kgHigh);
+      if(hasLow)  body += '\n     🟡 L: ' + e.karungLow  + ' krg | ' + e.basahLow  + ' kg basah | ' + e.keringLow  + ' kg kering | ' + e.blockLow  + ' pcs' + blockBreak(e.block1kgLow, e.block5kgLow);
+      if(!body) body = '\n     ' + e.karung + ' krg | ' + e.basah + ' kg basah | ' + e.kering + ' kg kering | ' + e.block + ' pcs';
+      return head + body + (e.notes ? '\n     📌 ' + e.notes : '');
+    }).join('\n\n');
+
+    // Carry-over section (hanya tampil kalau ada)
+    var carrySection = '';
+    if((c.tCarry || 0) > 0){
+      carrySection = '🔄 *CARRY-OVER (basah dari shift/hari sebelumnya yang dijemur ulang hari ini)*\n' +
+        '   🟢 High EC: ' + (c.tCh || 0).toFixed(1) + ' kg\n' +
+        '   🟡 Low EC:  ' + (c.tCl || 0).toFixed(1) + ' kg\n' +
+        '   _Sudah tercatat di Bahan Baku — TIDAK dipotong dari stok lagi_\n\n';
+    }
+
+    var totalDijemurLine = (c.tCarry || 0) > 0
+      ? '   💧 Basah dijemur : ' + (c.totalDijemur || c.tB).toFixed(1) + ' kg ' +
+        '_(basah baru ' + c.tB.toFixed(1) + ' + carry-over ' + c.tCarry.toFixed(1) + ')_\n'
+      : '   💧 Basah   : ' + c.tB + ' kg\n';
+
+    var msg = '📊 *LAPORAN PRODUKSI — VSK*\n━━━━━━━━━━━━━━━━━\n📅 ' + d + '\n\n' +
+      '🟢 *HIGH EC*\n' +
+      '   📦 ' + c.tKh  + ' krg · 💧 ' + c.tBh.toFixed(1)  + ' kg basah · ☀️ ' + c.tKgh.toFixed(1) + ' kg kering\n' +
+      '   🧱 Block: ' + c.tBlk1kgH + ' pcs (1kg) · ' + c.tBlk5kgH + ' pcs (5kg)\n\n' +
+      '🟡 *LOW EC*\n' +
+      '   📦 ' + c.tKl  + ' krg · 💧 ' + c.tBll.toFixed(1) + ' kg basah · ☀️ ' + c.tKgl.toFixed(1) + ' kg kering\n' +
+      '   🧱 Block: ' + c.tBlk1kgL + ' pcs (1kg) · ' + c.tBlk5kgL + ' pcs (5kg)\n\n' +
+      carrySection +
+      '🧮 *TOTAL*\n' +
+      '   🧱 Block 1kg : *' + c.tBlk1kg + ' pcs* (' + c.pct1kg + '% dari target 100 pcs)\n' +
+      '   🧱 Block 5kg : *' + c.tBlk5kg + ' pcs* (' + c.pct5kg + '% dari target 10 pcs)\n' +
+      '   📦 Karung   : ' + c.tK + ' krg\n' +
+      totalDijemurLine +
+      '   ☀️ Kering   : ' + c.tKg + ' kg (target 150 kg)\n' +
+      '   📉 Susut    : ' + c.susut + '\n\n' +
+      '━━━ SHIFT ━━━\n' + lines + '\n━━━━━━━━━━━━━━━━━\n' +
+      '_*Confidential VSK Production System Report. It is prohibited to disseminate this information unless written approval is obtained from VSK management.*_\n' +
+      '_*©All Right Reserved PT Varian Sumber Karya®*_';
+
+    var WA_GROUP_URL = 'https://chat.whatsapp.com/DBBbbwJOniAKRLBAbbUfZJ?mode=gi_t';
+
+    function openWaGroup(){
+      // Buka grup di tab baru — user tinggal paste & send
+      window.open(WA_GROUP_URL, '_blank');
+    }
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(msg).then(function(){
+        toast('Laporan disalin ✓ — buka WA, paste & send', 'ok');
+        openWaGroup();
+      }).catch(function(){
+        alert(msg);
+        openWaGroup();
+      });
+    } else {
+      alert(msg);
+      openWaGroup();
+    }
+  }
+
+  function init(){
+    if(initialized) return;
+    initialized = true;
+
+    // Sub-nav
+    var navBtns = qsa('.subnav-btn');
+    for(var i=0; i<navBtns.length; i++){
+      navBtns[i].addEventListener('click', function(e){
+        e.preventDefault();
+        goto(this.getAttribute('data-page'));
+      });
+    }
+
+    // Shift cards
+    var shiftCards = qsa('.shift-card');
+    for(var j=0; j<shiftCards.length; j++){
+      shiftCards[j].addEventListener('click', function(e){
+        e.preventDefault();
+        setShift(this.getAttribute('data-shift'));
+      });
+    }
+
+    ['inp-basah-high','inp-basah-low','inp-kering-high','inp-kering-low',
+     'inp-carryin-high','inp-carryin-low'].forEach(function(id){
+      var el = $(id); if(el) el.addEventListener('input', calcSusut);
+    });
+
+    // Block matrix — live total
+    ['inp-block-1kg-high','inp-block-1kg-low','inp-block-5kg-high','inp-block-5kg-low'].forEach(function(id){
+      var el = $(id); if(el) el.addEventListener('input', updateBmTotal);
+    });
+
+    // Outcome buttons
+    var outcomeBtns = qsa('.outcome-btn');
+    for(var k=0; k<outcomeBtns.length; k++){
+      outcomeBtns[k].addEventListener('click', function(){
+        setOutcome(this.getAttribute('data-outcome'));
+      });
+    }
+
+    // Carry-in toggle
+    $('btn-carryin-toggle').addEventListener('click', function(){
+      carryInVisible = !carryInVisible;
+      $('carryin-section').style.display = carryInVisible ? '' : 'none';
+      this.textContent = carryInVisible
+        ? '− Tutup carry-over'
+        : '+ Ada basah carry-over dari shift/hari sebelumnya?';
+    });
+
+    $('btn-submit').addEventListener('click', submitShift);
+    $('btn-refresh-rekap').addEventListener('click', renderRekap);
+    $('btn-refresh-history').addEventListener('click', renderHistory);
+    $('btn-export-wa').addEventListener('click', exportWA);
+
+    // Help modal — open / close / tab switch
+    var helpOverlay = $('help-overlay-produksi');
+    $('btn-help-produksi').addEventListener('click', function(){
+      helpOverlay.classList.add('show');
+    });
+    $('help-close-produksi').addEventListener('click', function(){
+      helpOverlay.classList.remove('show');
+    });
+    helpOverlay.addEventListener('click', function(e){
+      if(e.target === helpOverlay) helpOverlay.classList.remove('show');
+    });
+    var helpTabs = helpOverlay.querySelectorAll('.help-tab');
+    var helpPanes = helpOverlay.querySelectorAll('.help-pane');
+    for(var ht=0; ht<helpTabs.length; ht++){
+      helpTabs[ht].addEventListener('click', function(){
+        var paneId = this.getAttribute('data-pane');
+        for(var i=0; i<helpTabs.length; i++)  helpTabs[i].classList.toggle('active', helpTabs[i] === this);
+        for(var j=0; j<helpPanes.length; j++) helpPanes[j].classList.toggle('active', helpPanes[j].getAttribute('data-pane') === paneId);
+      });
+    }
+  }
+
+  // Daftarkan modul ke shell
+  window.VSK.modules.produksi = {
+    onActivate: function(){
+      init();
+      // Refresh rekap kalau lagi di tab rekap saat balik ke modul ini
+      var activePage = section.querySelector('.page.active');
+      if(activePage && activePage.id === 'page-rekap')   renderRekap();
+      if(activePage && activePage.id === 'page-history') renderHistory();
+    }
+  };
+
+  // Init eager — biar handler shift card / input siap dipakai walaupun belum klik nav
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>

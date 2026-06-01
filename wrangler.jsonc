@@ -1,10 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vsk-sistem",
+  "main": "worker.js",
   "compatibility_date": "2026-04-21",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
-  "assets": { "directory": "." },
+  "assets": { "directory": ".", "binding": "ASSETS" },
 
   // ─────────────────────────────────────────────────────────────
   // ENV: STAGING & PRODUCTION
@@ -21,20 +22,24 @@
   // - `name` di tiap env block menentukan nama worker terpisah, jadi
   //   hostname default-nya juga berbeda (mis. vsk-sistem-staging.<acct>.workers.dev
   //   vs vsk-sistem.<acct>.workers.dev).
+  // - `main` = worker.js (routing /produksi, /rawmat, /penjualan, /ceo-dashboard)
+  // - `assets.binding` = "ASSETS" wajib agar worker.js bisa panggil env.ASSETS.fetch()
   // - Kalau pakai custom domain, isi `routes` di env yang sesuai.
   // - JANGAN deploy tanpa flag --env (tanpa flag akan pakai top-level
   //   `name` saja dan kemungkinan menabrak salah satu deployment).
   "env": {
     "staging": {
       "name": "vsk-sistem-staging",
+      "main": "worker.js",
       "observability": { "enabled": true },
-      "assets": { "directory": "." }
+      "assets": { "directory": ".", "binding": "ASSETS" }
       // "routes": [{ "pattern": "staging.vsk-sistem.example.com", "custom_domain": true }]
     },
     "production": {
       "name": "vsk-sistem",
+      "main": "worker.js",
       "observability": { "enabled": true },
-      "assets": { "directory": "." }
+      "assets": { "directory": ".", "binding": "ASSETS" }
       // "routes": [{ "pattern": "vsk-sistem.example.com", "custom_domain": true }]
     }
   }

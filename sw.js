@@ -1,7 +1,7 @@
 // VSK Sistem — Service Worker
 // Cache key di-bump setiap ada deploy mayor agar client lama dapat update.
-const CACHE = 'vsk-sistem-v1';
-const ASSETS = ['/manifest.json'];
+const CACHE = 'vsk-sistem-v2';
+const ASSETS = ['/manifest.json', '/shared.css'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -18,8 +18,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Index.html → network-first (selalu coba ambil yang terbaru, fallback cache)
-  if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
+  // HTML pages → network-first (selalu coba ambil yang terbaru, fallback cache)
+  const htmlRoutes = ['/', '/produksi', '/rawmat', '/penjualan', '/ceo-dashboard'];
+  if (htmlRoutes.includes(url.pathname) || url.pathname.endsWith('.html')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
